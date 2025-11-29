@@ -1,5 +1,6 @@
 using GameScrubsV2.Enums;
 using GameScrubsV2.Models;
+using GameScrubsV2.Repositories;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,10 +11,10 @@ public static partial class BracketEndpoints
 	public static void GetBracketById(this RouteGroupBuilder group) =>
 		group.MapGet("/{id:int}", async (
 				int id,
-				[FromServices] GameScrubsV2DbContext dbContext,
+				[FromServices] BracketRepository bracketRepository,
 				CancellationToken cancellationToken) =>
 			{
-				var bracket = await dbContext.Brackets.FindAsync(new object?[] { id, cancellationToken }, cancellationToken: cancellationToken);
+				var bracket = await bracketRepository.GetByIdAsync(id, cancellationToken);
 
 				return bracket is null
 					? Results.NotFound()
