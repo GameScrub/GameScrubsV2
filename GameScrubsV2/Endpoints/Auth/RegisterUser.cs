@@ -9,8 +9,8 @@ public static partial class AuthEndpoints
 {
 	public static void RegisterUser(this RouteGroupBuilder group) =>
 		group.MapPost("/register", async (
-				[FromServices] RegisterRequest request,
-				UserManager<IdentityUser> userManager,
+				[FromBody] RegisterRequest request,
+				[FromServices] UserManager<IdentityUser> userManager,
 				TokenService tokenService) =>
 			{
 				var existingUser = await userManager.FindByEmailAsync(request.Email);
