@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 using GameScrubsV2.Common;
 using GameScrubsV2.Enums;
-using GameScrubsV2.Models;
+using GameScrubsV2.Repositories;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +13,7 @@ public static partial class BracketEndpoints
 	public static void CreateBracket(this RouteGroupBuilder group) =>
 		group.MapPost("/", async (
 				[FromBody] CreateBracketRequest request,
-				[FromServices] GameScrubsV2DbContext dbContext,
+				[FromServices] BracketRepository bracketRepository,
 				TimeProvider timeProvider,
 				ILoggerFactory loggerFactory,
 				CancellationToken cancellationToken) =>
@@ -46,9 +46,7 @@ public static partial class BracketEndpoints
 						CreatedDate = timeProvider.GetUtcNow().DateTime
 					};
 
-					dbContext.Brackets.Add(bracket);
-
-					await dbContext.SaveChangesAsync(cancellationToken);
+					await bracketRepository.InsertAsync(bracket, cancellationToken);
 
 					return Results.CreatedAtRoute("GetBracketById", new { id = bracket.Id },
 						CreateBracketResponse.ToResponseModel(bracket));
