@@ -1,0 +1,7 @@
+﻿services:
+  gamescrubsv2:
+    image: gamescrubsv2
+    build:
+      context: .
+      dockerfile: GameScrubsV2/Dockerfile
+
