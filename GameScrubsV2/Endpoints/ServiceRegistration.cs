@@ -23,6 +23,8 @@ public static class ServiceRegistration
 			bracketGroup.GetAllBrackets();
 			bracketGroup.GetBracketById();
 			bracketGroup.CreateBracket();
+			bracketGroup.UpdateBracket();
+			bracketGroup.DeleteBracket();
 		}
 	}
 }
