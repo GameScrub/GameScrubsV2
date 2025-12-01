@@ -85,6 +85,22 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddCors(options =>
+{
+
+	var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>()
+	                     ?? Array.Empty<string>();
+
+	options.AddPolicy("AllowVueApp", policy =>
+	{
+		policy.WithOrigins(allowedOrigins)
+			.AllowAnyHeader()
+			.AllowAnyMethod()
+			.AllowCredentials();
+	});
+});
+
 builder.Services.AddSwaggerGen();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -141,7 +157,9 @@ app.UseSerilogRequestLogging(options =>
 	};
 });
 
+app.UseCors("AllowVueApp");
 app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
