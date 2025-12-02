@@ -6,7 +6,8 @@ public static class ServiceRegistration
 	{
 		public WebApplicationBuilder RegisterServices()
 		{
-			builder.Services.AddTransient<TokenService>();
+			builder.Services
+				.AddTransient<TokenService>();
 
 			return builder;
 		}
