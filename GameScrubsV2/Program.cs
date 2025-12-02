@@ -163,7 +163,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapAuthEndpoints();
-app.MapBracketEndpoints();
+app.MapEndpoints();
 
 app.Run();
