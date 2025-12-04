@@ -31,7 +31,7 @@ public static partial class BracketEndpoints
 
 					if (bracket.LockCode is not null && bracket.LockCode != request.LockCode)
 					{
-						return Results.BadRequest(new ErrorResponse("Invalid lock code"));
+						return Results.BadRequest(new MessageResponse("Invalid lock code"));
 					}
 
 					await bracketRepository.DeleteAsync(request.Id, cancellationToken);
@@ -41,7 +41,7 @@ public static partial class BracketEndpoints
 				catch (Exception ex)
 				{
 					logger.LogError(ex, "Error updating bracket with request {@BracketRequest}", request);
-					return Results.InternalServerError(new ErrorResponse("Error updating bracket"));
+					return Results.InternalServerError(new MessageResponse("Error updating bracket"));
 				}
 			})
 			.WithName("DeleteBracket")

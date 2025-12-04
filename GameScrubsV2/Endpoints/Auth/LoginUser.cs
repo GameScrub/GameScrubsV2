@@ -33,7 +33,7 @@ public static partial class AuthEndpoints
 				if (!result.Succeeded)
 				{
 					return result.IsLockedOut
-						? Results.BadRequest(new ErrorResponse("Account locked out"))
+						? Results.BadRequest(new MessageResponse("Account locked out"))
 						: Results.Unauthorized();
 				}
 
@@ -46,14 +46,14 @@ public static partial class AuthEndpoints
 				});
 
 				return !tokenResult.TryGet(out var tokenData)
-					? Results.InternalServerError(new ErrorResponse(tokenResult.FailureValue.ToString()))
+					? Results.InternalServerError(new MessageResponse(tokenResult.FailureValue.ToString()))
 					: Results.Ok(new LoginResponse(tokenData.Token));
 
 			}
 			catch (Exception ex)
 			{
 				logger.LogError(ex, "Error logging in user");
-				return Results.InternalServerError(new ErrorResponse("Error logging in user"));
+				return Results.InternalServerError(new MessageResponse("Error logging in user"));
 			}
 		}).WithName("Login");
 

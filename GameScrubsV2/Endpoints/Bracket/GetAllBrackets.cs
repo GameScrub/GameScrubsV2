@@ -22,7 +22,7 @@ public static partial class BracketEndpoints
 
 				if (data is null)
 				{
-					return Results.NotFound(new ErrorResponse("No brackets found"));
+					return Results.NotFound(new MessageResponse("No brackets found"));
 				}
 
 				var query = data.AsQueryable();

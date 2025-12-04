@@ -39,13 +39,13 @@ public static partial class AuthEndpoints
 
 					if (!tokenResult.TryGet(out var tokenData))
 					{
-						return Results.InternalServerError(new ErrorResponse(tokenResult.FailureValue.ToString()));
+						return Results.InternalServerError(new MessageResponse(tokenResult.FailureValue.ToString()));
 					}
 
 					return Results.Ok(new RegisterResponse("User registered successfully", user.Id, user.Email, tokenData.Token));
 				}
 
-				return Results.BadRequest(new ErrorResponse(result.Errors.Select(e => e.Description).ToList()));
+				return Results.BadRequest(new MessageResponse(result.Errors.Select(e => e.Description).ToList()));
 			})
 			.WithName("Register");
 

@@ -1,10 +1,12 @@
+using GameScrubsV2.Enums;
+
 namespace GameScrubsV2.Models;
 
 public partial class BracketPosition
 {
 	public int Id { get; set; }
 
-	public int Type { get; set; }
+	public BracketType Type { get; set; }
 
 	public string? Player1 { get; set; }
 

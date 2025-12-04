@@ -1,4 +1,4 @@
-﻿using GameScrubsV2.Common;
+using GameScrubsV2.Common;
 using GameScrubsV2.Models;
 using GameScrubsV2.Repositories;
 
@@ -29,33 +29,33 @@ public static partial class PlayerEndpoints
 				return Results.NotFound();
 			}
 
-			if(!int.TryParse(bracket.Type.ToString().Split('_').Last(), out var maxAmountOfPlayers))
+			if (!int.TryParse(bracket.Type.ToString().Split('_').Last(), out var maxAmountOfPlayers))
 			{
 				return Results.InternalServerError(
-					new ErrorResponse($"Error calculating max number of players for bracket type: {bracket.Type}"));
+					new MessageResponse($"Error calculating max number of players for bracket type: {bracket.Type}"));
 			}
 
 			if (request.PlayerIds.Length > maxAmountOfPlayers)
 			{
-				return Results.BadRequest(new ErrorResponse("Too many players"));
+				return Results.BadRequest(new MessageResponse("Too many players"));
 			}
 
 			if (bracket.LockCode is not null && bracket.LockCode != lockCode)
 			{
-				return Results.BadRequest(new ErrorResponse("Invalid lock code, failed to add player to bracket"));
+				return Results.BadRequest(new MessageResponse("Invalid lock code, failed to add player to bracket"));
 			}
 
 			var players = await dbContext.PlayerLists
 				.Where(player => player.BracketId == request.BracketId &&
-				                 request.PlayerIds.AsEnumerable().Contains(player.Id))
+								 request.PlayerIds.AsEnumerable().Contains(player.Id))
 				.ToListAsync(cancellationToken);
 
 			if (players.Count != request.PlayerIds.Length)
 			{
-				return Results.BadRequest(new ErrorResponse("Invalid player ids"));
+				return Results.BadRequest(new MessageResponse("Invalid player ids"));
 			}
 
-			for(var i = 0; i < request.PlayerIds.Length; i++)
+			for (var i = 0; i < request.PlayerIds.Length; i++)
 			{
 				if (request.PlayerIds[i] == 0)
 				{
@@ -63,7 +63,7 @@ public static partial class PlayerEndpoints
 				}
 
 				var currentPlayer = players.First(player => player.Id == request.PlayerIds[i]);
-				currentPlayer.Seed = i + 1;
+				currentPlayer.Seed = i;
 			}
 
 			await dbContext.SaveChangesAsync(cancellationToken);

@@ -28,7 +28,7 @@ public static partial class BracketEndpoints
 
 					if (startDate.Date < timeProvider.GetUtcNow().DateTime.Date)
 					{
-						return Results.BadRequest(new ErrorResponse("Start date must be in the future"));
+						return Results.BadRequest(new MessageResponse("Start date must be in the future"));
 					}
 
 					var bracket = new Models.Bracket
@@ -54,7 +54,7 @@ public static partial class BracketEndpoints
 				catch (Exception ex)
 				{
 					logger.LogError(ex, "Error creating bracket");
-					return Results.InternalServerError(new ErrorResponse("Error creating bracket"));
+					return Results.InternalServerError(new MessageResponse("Error creating bracket"));
 				}
 			})
 			.WithName("CreateBracket")
