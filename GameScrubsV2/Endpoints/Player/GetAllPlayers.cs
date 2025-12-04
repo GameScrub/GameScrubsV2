@@ -25,7 +25,7 @@ public static partial class PlayerEndpoints
 
 			if (bracket is null)
 			{
-				return Results.NotFound(new ErrorResponse("Bracket not found"));
+				return Results.NotFound(new MessageResponse("Bracket not found"));
 			}
 
 			var players = await dbContext.PlayerLists

@@ -32,12 +32,12 @@ public static partial class PlayerEndpoints
 
 			if (bracket.LockCode is not null && bracket.LockCode != lockCode)
 			{
-				return Results.BadRequest(new ErrorResponse("Invalid lock code, failed to remove player to bracket"));
+				return Results.BadRequest(new MessageResponse("Invalid lock code, failed to remove player to bracket"));
 			}
 
 			if (bracket.Status != BracketStatus.Setup)
 			{
-				return Results.BadRequest(new ErrorResponse("Bracket is not in setup status"));
+				return Results.BadRequest(new MessageResponse("Bracket is not in setup status"));
 			}
 
 			var player = await dbContext.PlayerLists
@@ -45,7 +45,7 @@ public static partial class PlayerEndpoints
 
 			if (player is null)
 			{
-				return Results.NotFound(new ErrorResponse("Player not found"));
+				return Results.NotFound(new MessageResponse("Player not found"));
 			}
 
 			dbContext.PlayerLists.Remove(player);

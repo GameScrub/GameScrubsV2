@@ -34,14 +34,14 @@ public static partial class BracketEndpoints
 
 					if (bracket.LockCode is not null && bracket.LockCode != lockCode)
 					{
-						return Results.BadRequest(new ErrorResponse("Invalid lock code, failed to update bracket"));
+						return Results.BadRequest(new MessageResponse("Invalid lock code, failed to update bracket"));
 					}
 
 					var startDate = DateTime.Parse(request.StartDate.ToString());
 
 					if (startDate.Date < timeProvider.GetUtcNow().DateTime.Date)
 					{
-						return Results.BadRequest(new ErrorResponse("Start date must be in the future"));
+						return Results.BadRequest(new MessageResponse("Start date must be in the future"));
 					}
 
 					bracket.Name = request.Name;
@@ -62,7 +62,7 @@ public static partial class BracketEndpoints
 				catch (Exception ex)
 				{
 					logger.LogError(ex, "Error updating bracket with request {@BracketRequest}", request);
-					return Results.InternalServerError(new ErrorResponse("Error updating bracket"));
+					return Results.InternalServerError(new MessageResponse("Error updating bracket"));
 				}
 			})
 			.WithName("UpdateBracket")

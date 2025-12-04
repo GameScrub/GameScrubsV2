@@ -1,5 +1,6 @@
 using GameScrubsV2.Endpoints.Auth;
 using GameScrubsV2.Endpoints.Bracket;
+using GameScrubsV2.Endpoints.Placement;
 using GameScrubsV2.Endpoints.Player;
 
 namespace GameScrubsV2.Endpoints;
@@ -12,7 +13,8 @@ public static class EndpointRegistration
 			app
 				.MapAuthEndpoints()
 				.MapBracketEndpoints()
-				.MapPlayerEndpoints();
+				.MapPlayerEndpoints()
+				.MapBracketPlacementEndpoints();
 
 		private IEndpointRouteBuilder MapAuthEndpoints()
 		{
@@ -28,25 +30,37 @@ public static class EndpointRegistration
 
 		private IEndpointRouteBuilder MapBracketEndpoints()
 		{
-			var bracketGroup = app.MapGroup("/api/brackets").WithTags("Brackets");
+			var group = app.MapGroup("/api/brackets").WithTags("Brackets");
 
-			bracketGroup.GetAllBrackets();
-			bracketGroup.GetBracketById();
-			bracketGroup.CreateBracket();
-			bracketGroup.UpdateBracket();
-			bracketGroup.DeleteBracket();
+			group.GetAllBrackets();
+			group.GetBracketById();
+			group.CreateBracket();
+			group.UpdateBracket();
+			group.DeleteBracket();
+			group.ChangeBracketStatus();
 
 			return app;
 		}
 
 		private IEndpointRouteBuilder MapPlayerEndpoints()
 		{
-			var bracketGroup = app.MapGroup("/api/players").WithTags("Players");
+			var group = app.MapGroup("/api/players").WithTags("Players");
 
-			bracketGroup.AddPlayer();
-			bracketGroup.GetAllPlayers();
-			bracketGroup.ReorderPlayers();
-			bracketGroup.RemovePlayer();
+			group.AddPlayer();
+			group.GetAllPlayers();
+			group.ReorderPlayers();
+			group.RemovePlayer();
+
+			return app;
+		}
+
+		private IEndpointRouteBuilder MapBracketPlacementEndpoints()
+		{
+			var group = app.MapGroup("/api/placements").WithTags("Placements");
+
+			group.GetBracketPlacement();
+			group.SetPlacementScore();
+			group.GetPlacementScores();
 
 			return app;
 		}

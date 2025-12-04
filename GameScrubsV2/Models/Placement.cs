@@ -1,3 +1,5 @@
+using GameScrubsV2.Enums;
+
 namespace GameScrubsV2.Models;
 
 public partial class Placement
@@ -12,7 +14,7 @@ public partial class Placement
 
 	public int Score { get; set; }
 
-	public int Status { get; set; }
+	public PlacementStatus Status { get; set; }
 
 	public string? PreviousBracketPlace { get; set; }
 

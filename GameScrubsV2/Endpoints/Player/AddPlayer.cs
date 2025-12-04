@@ -33,7 +33,7 @@ public static partial class PlayerEndpoints
 
 			if (bracket.LockCode is not null && bracket.LockCode != lockCode)
 			{
-				return Results.BadRequest(new ErrorResponse("Invalid lock code, failed to add player to bracket"));
+				return Results.BadRequest(new MessageResponse("Invalid lock code, failed to add player to bracket"));
 			}
 
 			var playerName = request.PlayerName.ToLower().Trim();
@@ -44,12 +44,12 @@ public static partial class PlayerEndpoints
 
 			if (players.Any(player => player.PlayerName?.ToLower() == playerName))
 			{
-				return Results.BadRequest(new ErrorResponse("Player already exists in bracket"));
+				return Results.BadRequest(new MessageResponse("Player already exists in bracket"));
 			}
 
 			if (playerName == Constants.DefaultPlayerName)
 			{
-				return Results.BadRequest(new ErrorResponse("Player name cannot be the reserved name of --"));
+				return Results.BadRequest(new MessageResponse("Player name cannot be the reserved name of --"));
 			}
 
 			var newPlayer = new PlayerList
@@ -63,15 +63,15 @@ public static partial class PlayerEndpoints
 			if(!int.TryParse(bracket.Type.ToString().Split('_').Last(), out var maxAmountOfPlayers))
 			{
 				return Results.InternalServerError(
-					new ErrorResponse($"Error calculating max number of players for bracket type: {bracket.Type}"));
+					new MessageResponse($"Error calculating max number of players for bracket type: {bracket.Type}"));
 			}
 
 			if (players.Count == maxAmountOfPlayers)
 			{
-				return Results.BadRequest(new ErrorResponse("Bracket is full"));
+				return Results.BadRequest(new MessageResponse("Bracket is full"));
 			}
 
-			for(var seed = 1; seed <= maxAmountOfPlayers; seed++)
+			for(var seed = 0; seed < maxAmountOfPlayers; seed++)
 			{
 				if (players.Exists(player => player.Seed == seed))
 				{
