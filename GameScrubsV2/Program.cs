@@ -90,15 +90,12 @@ builder.Services.AddCors(options =>
 {
 
 	var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>()
-	                     ?? Array.Empty<string>();
+						 ?? Array.Empty<string>();
 
-	options.AddPolicy("AllowVueApp", policy =>
-	{
-		policy.WithOrigins(allowedOrigins)
+	options.AddPolicy("AllowVueApp", policy => policy.WithOrigins(allowedOrigins)
 			.AllowAnyHeader()
 			.AllowAnyMethod()
-			.AllowCredentials();
-	});
+			.AllowCredentials());
 });
 
 builder.Services.AddSwaggerGen();

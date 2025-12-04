@@ -1,16 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace GameScrubsV2.Migrations
+namespace GameScrubsV2.Migrations;
+
+/// <inheritdoc />
+public partial class BracketData : Migration
 {
-    /// <inheritdoc />
-    public partial class BracketData : Migration
-    {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-	        migrationBuilder.Sql(@"
+	/// <inheritdoc />
+	protected override void Up(MigrationBuilder migrationBuilder)
+	{
+		migrationBuilder.Sql(@"
 				SET IDENTITY_INSERT [dbo].[BracketPositions] ON;
 
 				INSERT INTO [dbo].[BracketPositions] ([ID], [Type], [Player1], [Player2], [WinLocation], [Loselocation])
@@ -85,7 +85,7 @@ namespace GameScrubsV2.Migrations
 				SET IDENTITY_INSERT [dbo].[BracketPositions] OFF;
 			");
 
-	        migrationBuilder.Sql(@"
+		migrationBuilder.Sql(@"
                 INSERT INTO BracketScores ([Type], [BracketPlace], [Score]) VALUES
                 -- Single 8
                 (0, 'w15', 1), (0, 'w14', 2), (0, 'w13', 2), (0, 'w12', 3), (0, 'w11', 3),
@@ -148,13 +148,12 @@ namespace GameScrubsV2.Migrations
                 (5, 'l9', 15), (5, 'l10', 15), (5, 'l11', 15), (5, 'l12', 15),
                 (5, 'l13', 15), (5, 'l14', 15), (5, 'l15', 15), (5, 'l16', 15);
             ");
-        }
+	}
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-	        migrationBuilder.Sql("DELETE FROM BracketScores");
-	        migrationBuilder.Sql("DELETE FROM BracketPositions");
-        }
-    }
+	/// <inheritdoc />
+	protected override void Down(MigrationBuilder migrationBuilder)
+	{
+		migrationBuilder.Sql("DELETE FROM BracketScores");
+		migrationBuilder.Sql("DELETE FROM BracketPositions");
+	}
 }

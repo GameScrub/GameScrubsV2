@@ -10,7 +10,7 @@ namespace GameScrubsV2.Endpoints.Placement;
 public static partial class PlacementEndpoints
 {
 	public static void GetBracketPlacement(this RouteGroupBuilder group) =>
-		group.MapGet("/{bracketId:int}", async (
+		group.MapGet("/", async (
 				[FromRoute] int bracketId,
 				[FromServices] GameScrubsV2DbContext dbContext,
 				ILoggerFactory loggerFactory,

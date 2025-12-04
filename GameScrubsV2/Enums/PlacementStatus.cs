@@ -1,4 +1,4 @@
-﻿namespace GameScrubsV2.Enums;
+namespace GameScrubsV2.Enums;
 
 public enum PlacementStatus
 {

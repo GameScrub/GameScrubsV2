@@ -1,4 +1,4 @@
-﻿namespace GameScrubsV2.Common;
+namespace GameScrubsV2.Common;
 
 public static class Constants
 {

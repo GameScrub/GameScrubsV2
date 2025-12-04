@@ -1,4 +1,4 @@
-﻿using GameScrubsV2.Common;
+using GameScrubsV2.Common;
 using GameScrubsV2.Models;
 using GameScrubsV2.Repositories;
 
@@ -39,21 +39,21 @@ public static partial class PlayerEndpoints
 		.WithName("GetAllPlayers")
 		.AllowAnonymous();
 
-		public sealed record GetAllPlayersResponse
-		{
-			public required int Id { get; init; }
-			public required int BracketId { get; init; }
-			public required string? PlayerName { get; init; }
-			public required int Seed { get; init; }
-			public required int Score { get; init; }
+	public sealed record GetAllPlayersResponse
+	{
+		public required int Id { get; init; }
+		public required int BracketId { get; init; }
+		public required string? PlayerName { get; init; }
+		public required int Seed { get; init; }
+		public required int Score { get; init; }
 
-			public static GetAllPlayersResponse ToResponseModel(PlayerList data) => new()
-			{
-				Id = data.Id,
-				PlayerName = data.PlayerName,
-				BracketId = data.BracketId,
-				Seed = data.Seed,
-				Score = data.Score
-			};
-		}
+		public static GetAllPlayersResponse ToResponseModel(PlayerList data) => new()
+		{
+			Id = data.Id,
+			PlayerName = data.PlayerName,
+			BracketId = data.BracketId,
+			Seed = data.Seed,
+			Score = data.Score
+		};
+	}
 }

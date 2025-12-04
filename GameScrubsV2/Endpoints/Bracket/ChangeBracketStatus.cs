@@ -1,4 +1,4 @@
-﻿using GameScrubsV2.Common;
+using GameScrubsV2.Common;
 using GameScrubsV2.Enums;
 using GameScrubsV2.Models;
 using GameScrubsV2.Repositories;
@@ -71,7 +71,7 @@ public static partial class BracketEndpoints
 									{
 										BracketPlace = positions.ElementAt(seed).Key,
 										Score = positions.ElementAt(seed).Value,
-										PlayerName = players.Single(x => x.Seed == seed).PlayerName,
+										PlayerName = players.Single(player => player.Seed == seed).PlayerName,
 										BracketId = bracket.Id,
 										Status = PlacementStatus.Default,
 									});
@@ -82,7 +82,7 @@ public static partial class BracketEndpoints
 									{
 										BracketPlace = positions.ElementAt(seed).Key,
 										Score = positions.ElementAt(seed).Value,
-										PlayerName = "--",
+										PlayerName = Constants.DefaultPlayerName,
 										BracketId = bracket.Id,
 										Status = PlacementStatus.Default
 									});

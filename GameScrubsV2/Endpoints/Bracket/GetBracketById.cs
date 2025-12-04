@@ -1,5 +1,4 @@
 using GameScrubsV2.Enums;
-using GameScrubsV2.Models;
 using GameScrubsV2.Repositories;
 
 using Microsoft.AspNetCore.Mvc;

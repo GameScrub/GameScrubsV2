@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 using GameScrubsV2.Common;
 using GameScrubsV2.Models;
@@ -60,7 +60,7 @@ public static partial class PlayerEndpoints
 				Seed = 0
 			};
 
-			if(!int.TryParse(bracket.Type.ToString().Split('_').Last(), out var maxAmountOfPlayers))
+			if (!int.TryParse(bracket.Type.ToString().Split('_').Last(), out var maxAmountOfPlayers))
 			{
 				return Results.InternalServerError(
 					new MessageResponse($"Error calculating max number of players for bracket type: {bracket.Type}"));
@@ -71,7 +71,7 @@ public static partial class PlayerEndpoints
 				return Results.BadRequest(new MessageResponse("Bracket is full"));
 			}
 
-			for(var seed = 0; seed < maxAmountOfPlayers; seed++)
+			for (var seed = 0; seed < maxAmountOfPlayers; seed++)
 			{
 				if (players.Exists(player => player.Seed == seed))
 				{
@@ -91,15 +91,15 @@ public static partial class PlayerEndpoints
 		.WithName("AddPlayer")
 		.AllowAnonymous();
 
-		public sealed record AddPlayerRequest
-		{
-			public required int BracketId { get; init; }
+	public sealed record AddPlayerRequest
+	{
+		public required int BracketId { get; init; }
 
-			[Min(1)]
-			[MaxLength(25)]
-			public required string PlayerName { get; init; }
+		[Min(1)]
+		[MaxLength(25)]
+		public required string PlayerName { get; init; }
 
-			[Min(0)]
-			public required int Seed { get; init; }
-		}
+		[Min(0)]
+		public required int Seed { get; init; }
+	}
 }

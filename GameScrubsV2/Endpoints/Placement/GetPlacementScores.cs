@@ -1,12 +1,9 @@
 using GameScrubsV2.Common;
-using GameScrubsV2.Enums;
 using GameScrubsV2.Models;
 using GameScrubsV2.Repositories;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
-using static GameScrubsV2.Endpoints.Placement.PlacementEndpoints.SetPlacementScoreResult;
 
 namespace GameScrubsV2.Endpoints.Placement;
 
@@ -14,7 +11,7 @@ public static partial class PlacementEndpoints
 {
 
 	public static void GetPlacementScores(this RouteGroupBuilder group) =>
-		group.MapGet("/{bracketId:int}/score", async (
+		group.MapGet("/score", async (
 				[FromRoute] int bracketId,
 				[FromServices] GameScrubsV2DbContext dbContext,
 				BracketRepository bracketRepository,
@@ -40,8 +37,8 @@ public static partial class PlacementEndpoints
 					.ToListAsync(cancellationToken);
 
 				foreach (var position in placements.Where(
-					         position => !playerScores.ContainsKey(position.PlayerName!)
-					                     && position.PlayerName!.ToLower() != Constants.DefaultPlayerName))
+							 position => !playerScores.ContainsKey(position.PlayerName!)
+										 && position.PlayerName!.ToLower() != Constants.DefaultPlayerName))
 				{
 					playerScores.Add(position.PlayerName!, position.Score);
 				}

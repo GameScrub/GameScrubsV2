@@ -56,7 +56,7 @@ public static class EndpointRegistration
 
 		private IEndpointRouteBuilder MapBracketPlacementEndpoints()
 		{
-			var group = app.MapGroup("/api/placements").WithTags("Placements");
+			var group = app.MapGroup("/api/brackets/{bracketId:int}/placements").WithTags("Placements");
 
 			group.GetBracketPlacement();
 			group.SetPlacementScore();

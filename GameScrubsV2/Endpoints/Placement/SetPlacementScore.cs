@@ -16,6 +16,7 @@ public static partial class PlacementEndpoints
 
 	public static void SetPlacementScore(this RouteGroupBuilder group) =>
 		group.MapPost("/score/{placementId:int}/{lockCode?}", async (
+				[FromRoute] int bracketId,
 				[FromRoute] int placementId,
 				[FromRoute] string? lockCode,
 				[FromServices] GameScrubsV2DbContext dbContext,
@@ -34,7 +35,7 @@ public static partial class PlacementEndpoints
 					return Results.NotFound(new MessageResponse("Placement not found"));
 				}
 
-				var bracket = await bracketRepository.GetByIdAsync(winner.BracketId, cancellationToken);
+				var bracket = await bracketRepository.GetByIdAsync(bracketId, cancellationToken);
 
 				if (bracket is null)
 				{
@@ -70,20 +71,20 @@ public static partial class PlacementEndpoints
 
 				var isEdit = await dbContext.Placements
 					.AnyAsync(placement => placement.BracketId == bracket.Id &&
-					                       placement.BracketPlace == position.WinLocation,
+										   placement.BracketPlace == position.WinLocation,
 					cancellationToken);
 
 				var isPlayer1 = position.Player1 == winner.BracketPlace;
 
 				var winnerScore = await dbContext.BracketScores
 					.SingleOrDefaultAsync(score => score.BracketPlace == position.WinLocation
-					                               && score.Type == bracket.Type, cancellationToken)
-				                  ?? new BracketScore { BracketPlace = position.WinLocation, Score = 0 };
+												   && score.Type == bracket.Type, cancellationToken)
+								  ?? new BracketScore { BracketPlace = position.WinLocation, Score = 0 };
 
 				var loserScore = await dbContext.BracketScores
 					.SingleOrDefaultAsync(score => score.BracketPlace == position.Loselocation
-					                               && score.Type == bracket.Type, cancellationToken)
-				                 ?? new BracketScore { BracketPlace = position.Loselocation, Score = 0 };
+												   && score.Type == bracket.Type, cancellationToken)
+								 ?? new BracketScore { BracketPlace = position.Loselocation, Score = 0 };
 
 				if (!isEdit)
 				{
@@ -156,9 +157,9 @@ public static partial class PlacementEndpoints
 		{
 			var loser = await dbContext.Placements
 				.SingleOrDefaultAsync(placement => placement.BracketPlace != position.WinLocation
-				                                   && placement.BracketPlace == (isPlayer1
-					                                   ? position.Player2
-					                                   : position.Player1),
+												   && placement.BracketPlace == (isPlayer1
+													   ? position.Player2
+													   : position.Player1),
 					cancellationToken);
 
 			if (loser != null)
@@ -200,7 +201,7 @@ public static partial class PlacementEndpoints
 
 		var winnerExistingPlacement = await dbContext.Placements
 			.SingleOrDefaultAsync(placement => placement.BracketId == bracket.Id
-			                                   && placement.BracketPlace == position.WinLocation,
+											   && placement.BracketPlace == position.WinLocation,
 				cancellationToken);
 
 		if (winnerExistingPlacement is null)
@@ -219,9 +220,9 @@ public static partial class PlacementEndpoints
 		{
 			var loser = await dbContext.Placements
 				.SingleOrDefaultAsync(placement => placement.BracketId == bracket.Id
-				                                   && placement.BracketPlace == (isPlayer1
-					                                   ? position.Player2
-					                                   : position.Player1),
+												   && placement.BracketPlace == (isPlayer1
+													   ? position.Player2
+													   : position.Player1),
 					cancellationToken);
 
 			if (loser is null)
@@ -232,7 +233,7 @@ public static partial class PlacementEndpoints
 
 			var loserExistingPlacement = await dbContext.Placements
 				.SingleOrDefaultAsync(placement => placement.BracketId == bracket.Id
-				                                   && placement.BracketPlace == position.Loselocation,
+												   && placement.BracketPlace == position.Loselocation,
 					cancellationToken);
 
 			if (loserExistingPlacement is null)
