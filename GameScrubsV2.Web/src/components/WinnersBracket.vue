@@ -158,11 +158,19 @@ function getMatchSpacing(roundIndex: number): number {
     return 2;
   }
 
-  // Calculate spacing iteratively instead of recursively
-  let spacing = 2; // Round 0 spacing
+  // Calculate spacing iteratively
+  let spacing = 2;
   for (let i = 1; i <= roundIndex; i++) {
     spacing = 2 * (matchHeight + spacing) - matchHeight;
   }
+
+  // Apply scaling for larger brackets to keep them manageable
+  // Scale down progressively for rounds beyond the 3rd
+  if (roundIndex > 3) {
+    const scaleFactor = 0.7; // Reduce spacing for very large brackets
+    return spacing * scaleFactor;
+  }
+
   return spacing;
 }
 
@@ -282,29 +290,24 @@ function getChampionOffset() {
   position: relative;
 }
 
-/* Round 1 spacing - 16 matches */
 .round[data-round='1'] .matches :deep(.match:not(:last-child)) {
   margin-bottom: 2rem;
 }
 
-/* Round 2 spacing - 8 matches */
 .round[data-round='2'] .matches :deep(.match:not(:last-child)) {
-  margin-bottom: 12rem;
+  margin-bottom: calc(v-bind('getMatchSpacing(1)') * 1rem);
 }
 
-/* Round 3 spacing - 4 matches */
 .round[data-round='3'] .matches :deep(.match:not(:last-child)) {
-  margin-bottom: 32rem;
+  margin-bottom: calc(v-bind('getMatchSpacing(2)') * 1rem);
 }
 
-/* Round 4 spacing - 2 matches */
 .round[data-round='4'] .matches :deep(.match:not(:last-child)) {
-  margin-bottom: 72rem;
+  margin-bottom: calc(v-bind('getMatchSpacing(3)') * 1rem);
 }
 
-/* Round 5 spacing - 1 match */
 .round[data-round='5'] .matches :deep(.match:not(:last-child)) {
-  margin-bottom: 152rem;
+  margin-bottom: calc(v-bind('getMatchSpacing(4)') * 1rem);
 }
 
 .round:last-child .matches :deep(.match::after) {
@@ -485,5 +488,61 @@ function getChampionOffset() {
 
 .round[data-round='5'] .matches :deep(.match:not(:last-child)) {
   margin-bottom: calc(v-bind('getMatchSpacing(4)') * 1rem);
+}
+
+.round[data-round='0'] .matches :deep(.match:not(:last-child)) {
+  margin-bottom: 2rem;
+}
+
+/* Round 6 spacing */
+.round[data-round='6'] .matches :deep(.match:not(:last-child)) {
+  margin-bottom: calc(v-bind('getMatchSpacing(5)') * 1rem);
+}
+
+/* Vertical connectors for Round 6 */
+.round[data-round='6'] .matches :deep(.match:nth-child(odd)::before) {
+  content: '';
+  position: absolute;
+  right: -2rem;
+  top: 50%;
+  width: 2px;
+  height: calc(100% + v-bind('getMatchSpacing(5)') * 1rem);
+  background: hwb(123 11% 33%);
+}
+
+.round[data-round='6'] .matches :deep(.match:nth-child(even)::before) {
+  content: '';
+  position: absolute;
+  right: -2rem;
+  bottom: 50%;
+  width: 2px;
+  height: calc(100% + v-bind('getMatchSpacing(5)') * 1rem);
+  background: hwb(123 11% 33%);
+}
+
+/* Round 7 spacing (for future 64-player brackets) */
+.round[data-round='7'] .matches :deep(.match:not(:last-child)) {
+  margin-bottom: calc(v-bind('getMatchSpacing(6)') * 1rem);
+}
+
+/* Vertical connectors for Round 7 */
+.round[data-round='7'] .matches :deep(.match:nth-child(odd)::before) {
+  content: '';
+  position: absolute;
+  right: -2rem;
+  top: 50%;
+  width: 2px;
+  height: calc(100% + v-bind('getMatchSpacing(6)') * 1rem);
+  background: hwb(123 11% 33%);
+}
+
+.round[data-round='7'] .matches :deep(.match:nth-child(even)::before) {
+  content: '';
+  position: absolute;
+  right: -2rem;
+  bottom: 50%;
+  width: 2px;
+  height: calc(100% + v-bind('getMatchSpacing(6)') * 1rem);
+  background: hwb(123 11% 33%);
 }
 </style>
