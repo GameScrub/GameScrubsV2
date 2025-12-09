@@ -7,6 +7,7 @@ public static class RepositoryRegistration
 		public WebApplicationBuilder RegisterRepositories()
 		{
 			builder.Services.AddTransient<BracketRepository>();
+			builder.Services.AddTransient<BracketPositionsRepository>();
 
 			return builder;
 		}

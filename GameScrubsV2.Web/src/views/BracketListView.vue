@@ -87,7 +87,12 @@
                       {{ item.id }}
                     </td>
                     <td class="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
-                      {{ item.name }}
+                      <router-link
+                        :to="{ name: 'bracket', params: { id: item.id } }"
+                        class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
+                      >
+                        {{ item.name }}
+                      </router-link>
                     </td>
                     <td class="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
                       {{ item.game }}
@@ -127,9 +132,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { bracketService, type Bracket } from '@/services/bracketService';
+import { bracketService } from '@/services/bracketService';
 import Sidebar from '../partials/Sidebar.vue';
 import Header from '../partials/Header.vue';
+import type { Bracket } from '@/models/Bracket';
 
 const items = ref<Bracket[]>([]);
 const loading = ref(false);
@@ -146,15 +152,6 @@ const loadItems = async () => {
     error.value = err instanceof Error ? err.message : 'An error occurred';
   } finally {
     loading.value = false;
-  }
-};
-
-const deleteItem = async (id: number) => {
-  try {
-    await bracketService.delete(id);
-    items.value = items.value.filter((item) => item.id !== id);
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to delete';
   }
 };
 

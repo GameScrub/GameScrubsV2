@@ -61,6 +61,7 @@ public static class EndpointRegistration
 			group.GetBracketPlacement();
 			group.SetPlacementScore();
 			group.GetPlacementScores();
+			group.GetPlacementPositions();
 
 			return app;
 		}

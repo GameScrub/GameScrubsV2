@@ -1,27 +1,5 @@
 import { API_BASE_URL } from '@/api.config';
-
-export type BracketType =
-  | 'Single_8'
-  | 'Single_16'
-  | 'Single_32'
-  | 'Double_8'
-  | 'Double_16'
-  | 'Double_32';
-export type BracketStatus = 'Pending' | 'Started' | 'InProgress' | 'Completed' | 'Cancelled';
-export type Competition = 'VideoGames' | 'Sports' | 'Esports' | 'Other';
-
-export interface Bracket {
-  id: number;
-  name: string;
-  game: string;
-  url: string | null;
-  isLocked: boolean;
-  type: BracketType;
-  status: BracketStatus;
-  competition: Competition;
-  startDate: string;
-  createdDate: string;
-}
+import { type Bracket } from '@/models/Bracket';
 
 export const bracketService = {
   // GET all items
@@ -33,8 +11,8 @@ export const bracketService = {
 
   // GET single item
   async getById(id: number): Promise<Bracket> {
-    const response = await fetch(`${API_BASE_URL}/items/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch item');
+    const response = await fetch(`${API_BASE_URL}/brackets/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch bracket');
     return response.json();
   },
 

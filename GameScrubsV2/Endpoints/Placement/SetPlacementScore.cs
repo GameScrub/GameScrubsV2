@@ -47,6 +47,12 @@ public static partial class PlacementEndpoints
 					return Results.BadRequest(new MessageResponse("Bracket is not in started status"));
 				}
 
+				if (winner.BracketId != bracketId)
+				{
+					logger.LogError("Placement {PlacementId} does not belong to bracket {BracketId}", placementId, bracketId);
+					return Results.BadRequest(new MessageResponse("Placement does not belong to bracket"));
+				}
+
 				var isDouble = bracket.Type
 					.ToString()
 					.ToLower()
@@ -82,9 +88,9 @@ public static partial class PlacementEndpoints
 								  ?? new BracketScore { BracketPlace = position.WinLocation, Score = 0 };
 
 				var loserScore = await dbContext.BracketScores
-					.SingleOrDefaultAsync(score => score.BracketPlace == position.Loselocation
+					.SingleOrDefaultAsync(score => score.BracketPlace == position.LoseLocation
 												   && score.Type == bracket.Type, cancellationToken)
-								 ?? new BracketScore { BracketPlace = position.Loselocation, Score = 0 };
+								 ?? new BracketScore { BracketPlace = position.LoseLocation, Score = 0 };
 
 				if (!isEdit)
 				{
@@ -142,43 +148,42 @@ public static partial class PlacementEndpoints
 		ILogger logger,
 		CancellationToken cancellationToken)
 	{
+		winner.Status = PlacementStatus.Winner;
+
 		dbContext.Placements.Add(new Models.Placement
 		{
 			BracketId = bracket.Id,
 			PlayerName = winner.PlayerName,
 			BracketPlace = position.WinLocation,
 			Score = winnerScore.Score,
-			Status = PlacementStatus.Winner,
+			Status = PlacementStatus.Default,
 			PreviousBracketPlace = winner.BracketPlace,
 			IsTop = isPlayer1,
 		});
 
-		if (isDouble && !string.IsNullOrEmpty(position.Loselocation))
-		{
-			var loser = await dbContext.Placements
-				.SingleOrDefaultAsync(placement => placement.BracketPlace != position.WinLocation
-												   && placement.BracketPlace == (isPlayer1
-													   ? position.Player2
-													   : position.Player1),
-					cancellationToken);
+		var loser = await dbContext.Placements
+			.SingleAsync(placement => placement.BracketPlace != position.WinLocation
+			                                   && placement.BracketPlace == (isPlayer1
+				                                   ? position.Player2
+				                                   : position.Player1),
+				cancellationToken);
 
-			if (loser != null)
+		// Update existing status
+		loser.Status = PlacementStatus.Loser;
+
+		if (isDouble && !string.IsNullOrEmpty(position.LoseLocation))
+		{
+
+			// Create new placement
+			dbContext.Placements.Add(new Models.Placement
 			{
-				dbContext.Placements.Add(new Models.Placement
-				{
-					BracketId = bracket.Id,
-					PlayerName = loser.PlayerName,
-					BracketPlace = position.Loselocation,
-					Score = loserScore.Score,
-					Status = PlacementStatus.Loser,
-					PreviousBracketPlace = loser.BracketPlace,
-				});
-			}
-			else
-			{
-				logger.LogError("Losers bracket placement not found for bracket position {@BracketPosition}", position);
-				return MissingLoserPlacement;
-			}
+				BracketId = bracket.Id,
+				PlayerName = loser.PlayerName,
+				BracketPlace = position.LoseLocation,
+				Score = loserScore.Score,
+				Status = PlacementStatus.Default,
+				PreviousBracketPlace = loser.BracketPlace,
+			});
 		}
 
 		await dbContext.SaveChangesAsync(cancellationToken);
@@ -198,7 +203,7 @@ public static partial class PlacementEndpoints
 		ILogger logger,
 		CancellationToken cancellationToken)
 	{
-
+		winner.Status = PlacementStatus.Winner;
 		var winnerExistingPlacement = await dbContext.Placements
 			.SingleOrDefaultAsync(placement => placement.BracketId == bracket.Id
 											   && placement.BracketPlace == position.WinLocation,
@@ -216,37 +221,34 @@ public static partial class PlacementEndpoints
 		winnerExistingPlacement.PreviousBracketPlace = winner.BracketPlace;
 		winnerExistingPlacement.IsTop = isPlayer1;
 
+		var loser = await dbContext.Placements
+			.SingleAsync(placement => placement.BracketId == bracket.Id
+			                                   && placement.BracketPlace == (isPlayer1
+				                                   ? position.Player2
+				                                   : position.Player1),
+				cancellationToken);
+
+
+		loser.Status = PlacementStatus.Loser;
+
 		if (isDouble)
 		{
-			var loser = await dbContext.Placements
-				.SingleOrDefaultAsync(placement => placement.BracketId == bracket.Id
-												   && placement.BracketPlace == (isPlayer1
-													   ? position.Player2
-													   : position.Player1),
-					cancellationToken);
 
-			if (loser is null)
-			{
-				logger.LogError("Losers placement not found for bracket position {@BracketPosition}", position);
-				return MissingLoserPlacement;
-			}
 
 			var loserExistingPlacement = await dbContext.Placements
 				.SingleOrDefaultAsync(placement => placement.BracketId == bracket.Id
-												   && placement.BracketPlace == position.Loselocation,
+												   && placement.BracketPlace == position.LoseLocation,
 					cancellationToken);
 
-			if (loserExistingPlacement is null)
+			if (loserExistingPlacement != null)
 			{
-				logger.LogError("Losers placement not found for bracket position {@BracketPosition}", position);
-				return MissingLoserPlacement;
+				loserExistingPlacement.PlayerName = loser.PlayerName;
+				loserExistingPlacement.Score = loserScore.Score;
+				loserExistingPlacement.Status = PlacementStatus.Loser;
+				loserExistingPlacement.PreviousBracketPlace = loser.BracketPlace;
+				loserExistingPlacement.IsTop = false;
 			}
 
-			loserExistingPlacement.PlayerName = loser.PlayerName;
-			loserExistingPlacement.Score = loserScore.Score;
-			loserExistingPlacement.Status = PlacementStatus.Winner;
-			loserExistingPlacement.PreviousBracketPlace = loser.BracketPlace;
-			loserExistingPlacement.IsTop = false;
 		}
 
 		await dbContext.SaveChangesAsync(cancellationToken);

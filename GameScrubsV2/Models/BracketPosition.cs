@@ -14,5 +14,5 @@ public partial class BracketPosition
 
 	public string? WinLocation { get; set; }
 
-	public string? Loselocation { get; set; }
+	public string? LoseLocation { get; set; }
 }
