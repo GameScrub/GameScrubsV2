@@ -1,17 +1,19 @@
 <template>
-  <div class="flex h-[100dvh] overflow-hidden">
+  <div class="flex">
     <Sidebar :sidebarOpen="sidebarOpen" @close-sidebar="sidebarOpen = false" />
 
     <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
       <Header :sidebarOpen="sidebarOpen" @toggle-sidebar="sidebarOpen = !sidebarOpen" />
-      <main class="grow">
-        <div v-if="loading">Loading...</div>
+      <main class="p-4">
+        <div v-if="loading && placements.length === 0">Loading...</div>
         <div v-if="error" class="error">{{ error }}</div>
 
-        <div v-if="!loading && !error" class="tournament-bracket">
-          <div class="bracket-wrapper">
-            <WinnersBracket :rounds="winnersRounds" :champion="champion" />
-            <LosersBracket :rounds="losersRounds" />
+        <div v-if="!loading || placements.length > 0" class="inline-block">
+          <div class="tournament-bracket">
+            <div class="bracket-wrapper">
+              <WinnersBracket :rounds="winnersRounds" :champion="champion" />
+              <LosersBracket :rounds="losersRounds" />
+            </div>
           </div>
         </div>
       </main>
@@ -20,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, provide } from 'vue';
 import { useRoute } from 'vue-router';
 import { bracketPlacementService } from '@/services/bracketPlacementService';
 import { bracketService } from '@/services/bracketService';
@@ -41,6 +43,7 @@ const positions = ref<BracketPosition[]>([]);
 const error = ref<string | null>(null);
 const loading = ref(false);
 const sidebarOpen = ref(false);
+const isRefreshing = ref(false);
 
 interface MatchWithData extends BracketPosition {
   player1Data: BracketPlacement | null;
@@ -140,7 +143,7 @@ function buildRounds(matches: BracketPosition[]): MatchWithData[][] {
 const loadData = async () => {
   loading.value = true;
   error.value = null;
-
+  isRefreshing.value = true;
   try {
     const bracketId = Number(route.params.id);
 
@@ -154,8 +157,29 @@ const loadData = async () => {
     error.value = err instanceof Error ? err.message : 'An error occurred';
   } finally {
     loading.value = false;
+    isRefreshing.value = false;
   }
 };
+
+const refreshData = async () => {
+  isRefreshing.value = true;
+  try {
+    const bracketId = Number(route.params.id);
+
+    bracket.value = await bracketService.getById(bracketId);
+
+    [placements.value, positions.value] = await Promise.all([
+      bracketPlacementService.getBracketPlacements(bracketId),
+      bracketPlacementService.getBrackePositions(bracketId),
+    ]);
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'An error occurred';
+  } finally {
+    isRefreshing.value = false;
+  }
+};
+
+provide('refreshBracket', refreshData);
 
 onMounted(() => {
   loadData();
@@ -168,11 +192,10 @@ onMounted(() => {
 .tournament-bracket {
   padding: 2rem;
   overflow-x: auto;
-  min-height: 100vh;
 }
 
 .bracket-wrapper {
-  display: flex;
+  display: inline-flex; /* Change to inline-flex */
   flex-direction: column;
   gap: 3rem;
   min-width: max-content;

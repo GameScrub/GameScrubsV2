@@ -22,4 +22,16 @@ export const bracketPlacementService = {
 
     return response.json();
   },
+  // Set Bracket Placement
+  async setBracketPlacement(bracketId: number, placementId: number): Promise<void> {
+    const response = await fetch(
+      `${API_BASE_URL}/brackets/${bracketId}/placements/score/${placementId}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+
+    if (!response.ok) throw new Error('Failed to set bracket placement');
+  },
 };

@@ -20,6 +20,7 @@
             Round {{ roundIndex + 1 }}
           </h1>
         </div>
+
         <!-- Champion Header -->
         <div class="round-header">
           <h1 class="text-base md:text-base text-gray-800 dark:text-gray-100 font-bold mb-2">
@@ -63,7 +64,7 @@
           </div>
         </template>
 
-        <!-- Champion Section - Always show -->
+        <!-- Champion Section -->
         <div class="round champion-round" :style="getChampionOffset()">
           <div class="matches">
             <div class="champion-container">
@@ -119,7 +120,6 @@ function getConnectorStyle(roundIndex: number, connectorIndex: number) {
   // Special handling for last round to champion connector
   if (roundIndex === props.rounds.length - 1) {
     const lastRoundOffset = getConnectorOffset(roundIndex);
-    const lastRoundSpacing = getMatchSpacing(roundIndex);
 
     // For a tournament with one final match, we just need its center
     if (connectorIndex === 0) {
@@ -217,15 +217,8 @@ function getChampionOffset() {
   const lastRoundIndex = props.rounds.length - 1;
   const lastRoundOffset = calculateRoundOffset(lastRoundIndex);
 
-  // The connector points to the center of the last match
   const connectorPosition = lastRoundOffset + matchHeight / 2;
-
-  // The champion container is 8rem tall (from CSS min-height: 8rem)
   const championContainerHeight = 8;
-
-  // We want the CENTER of the champion container to align with the connector
-  // So: containerTop + containerHeight/2 = connectorPosition
-  // Therefore: containerTop = connectorPosition - containerHeight/2
   const offset = connectorPosition - championContainerHeight / 2;
 
   return {
