@@ -92,10 +92,12 @@ interface Props {
   player1: BracketPlacement | null;
   player2: BracketPlacement | null;
   showScores?: boolean;
+  lockCode?: string;
 }
 
 const notification = inject<ReturnType<typeof useNotification>>('notification');
 const refreshBracket = inject<() => Promise<void>>('refreshBracket');
+const showLockCodeError = inject<() => void>('showLockCodeError');
 
 const props = withDefaults(defineProps<Props>(), {
   showScores: false,
@@ -113,7 +115,7 @@ const closeModal = () => {
 
 const setWinner = async (player: BracketPlacement) => {
   try {
-    await bracketPlacementService.setBracketPlacement(player.bracketId, player.id);
+    await bracketPlacementService.setBracketPlacement(player.bracketId, player.id, props.lockCode);
     notification?.success('Bracket scores updated');
     closeModal();
 
@@ -121,7 +123,15 @@ const setWinner = async (player: BracketPlacement) => {
       await refreshBracket();
     }
   } catch (error) {
-    notification?.error(error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update bracket';
+
+    // Check if it's a lock code error
+    if (errorMessage.toLowerCase().includes('lock code')) {
+      closeModal();
+      showLockCodeError?.();
+    }
+
+    notification?.error(errorMessage);
   }
 };
 

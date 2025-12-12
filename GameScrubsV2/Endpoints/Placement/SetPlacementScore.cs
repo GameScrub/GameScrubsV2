@@ -42,6 +42,11 @@ public static partial class PlacementEndpoints
 					return Results.NotFound(new MessageResponse("Bracket not found"));
 				}
 
+				if (bracket.LockCode is not null && bracket.LockCode != lockCode)
+				{
+					return Results.BadRequest(new MessageResponse("Invalid lock code, lock code must match"));
+				}
+
 				if (bracket.Status != BracketStatus.Started)
 				{
 					return Results.BadRequest(new MessageResponse("Bracket is not in started status"));

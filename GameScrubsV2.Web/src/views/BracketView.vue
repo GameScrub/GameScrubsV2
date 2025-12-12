@@ -3,7 +3,17 @@
     <Sidebar :sidebarOpen="sidebarOpen" @close-sidebar="sidebarOpen = false" />
 
     <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-      <Header :sidebarOpen="sidebarOpen" @toggle-sidebar="sidebarOpen = !sidebarOpen" />
+      <Header
+        ref="headerRef"
+        :sidebarOpen="sidebarOpen"
+        :bracket-name="bracket?.name"
+        :game="bracket?.game"
+        :bracket-id="bracket?.id"
+        :is-locked="bracket?.isLocked"
+        @toggle-sidebar="sidebarOpen = !sidebarOpen"
+        @show-scores="handleShowScores"
+        @lock-code-change="handleLockCodeChange"
+      />
       <main class="p-4">
         <div v-if="loading && placements.length === 0">Loading...</div>
         <div v-if="error" class="error">{{ error }}</div>
@@ -11,13 +21,15 @@
         <div v-if="!loading || placements.length > 0" class="inline-block">
           <div class="tournament-bracket">
             <div class="bracket-wrapper">
-              <WinnersBracket :rounds="winnersRounds" :champion="champion" />
-              <LosersBracket :rounds="losersRounds" />
+              <WinnersBracket :rounds="winnersRounds" :champion="champion" :lock-code="lockCode" />
+              <LosersBracket :rounds="losersRounds" :lock-code="lockCode" />
             </div>
           </div>
         </div>
       </main>
     </div>
+
+    <BracketScore ref="bracketScoreRef" :bracket-id="bracket?.id" />
   </div>
 </template>
 
@@ -31,6 +43,7 @@ import Sidebar from '@/partials/Sidebar.vue';
 import Header from '@/partials/Header.vue';
 import WinnersBracket from '@/components/WinnersBracket.vue';
 import LosersBracket from '@/components/LosersBracket.vue';
+import BracketScore from '@/components/BracketScore.vue';
 
 import { type BracketPlacement } from '@/models/BracketPlacement';
 import { type BracketPosition } from '@/models/BracketPosition';
@@ -44,6 +57,9 @@ const error = ref<string | null>(null);
 const loading = ref(false);
 const sidebarOpen = ref(false);
 const isRefreshing = ref(false);
+const bracketScoreRef = ref<InstanceType<typeof BracketScore>>();
+const headerRef = ref<InstanceType<typeof Header>>();
+const lockCode = ref<string>();
 
 interface MatchWithData extends BracketPosition {
   player1Data: BracketPlacement | null;
@@ -179,7 +195,20 @@ const refreshData = async () => {
   }
 };
 
+const showLockCodeError = () => {
+  headerRef.value?.showLockCodeError();
+};
+
 provide('refreshBracket', refreshData);
+provide('showLockCodeError', showLockCodeError);
+
+const handleShowScores = () => {
+  bracketScoreRef.value?.showScores();
+};
+
+const handleLockCodeChange = (code: string) => {
+  lockCode.value = code;
+};
 
 onMounted(() => {
   loadData();

@@ -1,18 +1,25 @@
 import { API_BASE_URL } from '@/api.config';
 import { type Bracket } from '@/models/Bracket';
+import { getErrorMessage } from './apiErrorHandler';
 
 export const bracketService = {
   // GET all items
   async getAll(): Promise<Bracket[]> {
     const response = await fetch(`${API_BASE_URL}/brackets`);
-    if (!response.ok) throw new Error('Failed to fetch brackets');
+    if (!response.ok) {
+      const errorMessage = await getErrorMessage(response);
+      throw new Error(errorMessage);
+    }
     return response.json();
   },
 
   // GET single item
   async getById(id: number): Promise<Bracket> {
     const response = await fetch(`${API_BASE_URL}/brackets/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch bracket');
+    if (!response.ok) {
+      const errorMessage = await getErrorMessage(response);
+      throw new Error(errorMessage);
+    }
     return response.json();
   },
 
@@ -23,7 +30,10 @@ export const bracketService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(item),
     });
-    if (!response.ok) throw new Error('Failed to create item');
+    if (!response.ok) {
+      const errorMessage = await getErrorMessage(response);
+      throw new Error(errorMessage);
+    }
     return response.json();
   },
 
@@ -34,7 +44,10 @@ export const bracketService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(item),
     });
-    if (!response.ok) throw new Error('Failed to update item');
+    if (!response.ok) {
+      const errorMessage = await getErrorMessage(response);
+      throw new Error(errorMessage);
+    }
     return response.json();
   },
 
@@ -43,6 +56,9 @@ export const bracketService = {
     const response = await fetch(`${API_BASE_URL}/items/${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Failed to delete item');
+    if (!response.ok) {
+      const errorMessage = await getErrorMessage(response);
+      throw new Error(errorMessage);
+    }
   },
 };

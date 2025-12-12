@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import BracketListView from '@/views/BracketListView.vue';
+import HomeView from '@/views/HomeView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,6 +8,11 @@ const router = createRouter({
     {
       name: 'home',
       path: '/',
+      component: HomeView,
+    },
+    {
+      name: 'bracket-list',
+      path: '/bracket-list',
       component: BracketListView,
     },
     {

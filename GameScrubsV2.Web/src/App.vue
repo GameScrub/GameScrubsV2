@@ -13,7 +13,7 @@ provide('notification', notificationSystem);
 <template>
   <RouterView />
 
-  <div class="fixed top-4 right-4 z-50 space-y-2">
+  <div class="fixed bottom-4 right-4 z-50 space-y-2">
     <TransitionGroup name="notification" tag="div" class="space-y-2">
       <div v-for="notification in notifications" :key="`notif-${notification.id}`">
         <Notification

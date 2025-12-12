@@ -11,7 +11,7 @@ namespace GameScrubsV2.Endpoints.Bracket;
 public static partial class BracketEndpoints
 {
 	public static void ChangeBracketStatus(this RouteGroupBuilder group) =>
-		group.MapPost("/change-status/{lockcode:alpha?}", async (
+		group.MapPost("/change-status/{lockcode?}", async (
 				[FromRoute] string? lockCode,
 				[FromBody] ChangeBracketStatusRequest request,
 				[FromServices] BracketRepository bracketRepository,
