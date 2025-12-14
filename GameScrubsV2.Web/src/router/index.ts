@@ -16,6 +16,21 @@ const router = createRouter({
       component: BracketListView,
     },
     {
+      name: 'bracket-create',
+      path: '/bracket/create',
+      component: () => import('../views/ManageBracketView.vue'),
+    },
+    {
+      name: 'bracket-edit',
+      path: '/bracket/:id/edit',
+      component: () => import('../views/ManageBracketView.vue'),
+    },
+    {
+      name: 'bracket-manage-users',
+      path: '/bracket/:id/manage-users',
+      component: () => import('../views/ManageUserBracketView.vue'),
+    },
+    {
       name: 'bracket',
       path: '/bracket/:id',
       component: () => import('../views/BracketView.vue'),

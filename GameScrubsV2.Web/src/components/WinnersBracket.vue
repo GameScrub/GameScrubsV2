@@ -46,6 +46,7 @@
                 :player2="match.player2Data"
                 :show-scores="false"
                 :lock-code="lockCode"
+                :bracket-status="bracketStatus"
               />
             </div>
           </div>
@@ -97,6 +98,7 @@ interface Props {
   rounds: MatchWithData[][];
   champion: BracketPlacement | null;
   lockCode?: string;
+  bracketStatus?: string;
 }
 
 const props = defineProps<Props>();

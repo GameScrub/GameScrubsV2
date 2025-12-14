@@ -74,7 +74,7 @@
                       <div class="font-semibold text-left">Start Date</div>
                     </th>
                     <th class="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
-                      <span class="sr-only">Menu</span>
+                      <div class="font-semibold text-left">Actions</div>
                     </th>
                   </tr>
                 </thead>
@@ -115,14 +115,28 @@
                     <td class="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
                       {{ item.startDate }}
                     </td>
+                    <td class="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
+                      <div class="flex items-center gap-3">
+                        <router-link
+                          :to="{ name: 'bracket-edit', params: { id: item.id } }"
+                          class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                          title="Edit Bracket"
+                        >
+                          <IconSettings :size="20" :stroke-width="1.5" />
+                        </router-link>
+                        <router-link
+                          :to="{ name: 'bracket-manage-users', params: { id: item.id } }"
+                          class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                          title="Manage Players"
+                        >
+                          <IconUsers :size="20" :stroke-width="1.5" />
+                        </router-link>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          </div>
-          <!-- Pagination -->
-          <div class="mt-8">
-            <PaginationClassic />
           </div>
         </div>
       </main>
@@ -135,6 +149,7 @@ import { ref, onMounted } from 'vue';
 import { bracketService } from '@/services/bracketService';
 import Sidebar from '../partials/Sidebar.vue';
 import Header from '../partials/Header.vue';
+import { IconUsers, IconSettings } from '@tabler/icons-vue';
 import type { Bracket } from '@/models/Bracket';
 
 const items = ref<Bracket[]>([]);

@@ -1,5 +1,5 @@
 <template>
-  <div class="match bg-white dark:bg-gray-800 shadow-xs rounded-xl pl-2 pr-2">
+  <div class="match bg-white dark:bg-gray-800 shadow-xs rounded-xl pl-2 pr-2" :class="{ 'completed': bracketStatus === 'Completed' }">
     <!-- Body -->
     <div class="m-0" @click.stop="openModal">
       <!-- Content -->
@@ -93,6 +93,7 @@ interface Props {
   player2: BracketPlacement | null;
   showScores?: boolean;
   lockCode?: string;
+  bracketStatus?: string;
 }
 
 const notification = inject<ReturnType<typeof useNotification>>('notification');
@@ -106,6 +107,10 @@ const props = withDefaults(defineProps<Props>(), {
 const isModalOpen = ref(false);
 
 const openModal = () => {
+  // Don't open modal if bracket is completed
+  if (props.bracketStatus === 'Completed') {
+    return;
+  }
   isModalOpen.value = true;
 };
 
@@ -157,6 +162,14 @@ function getPlayerClass(player: BracketPlacement) {
 
 .match:hover {
   box-shadow: 0 2px 8px hwb(123 11% 33%);
+}
+
+.match.completed {
+  cursor: default;
+}
+
+.match.completed:hover {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .player {

@@ -10,8 +10,16 @@
         :game="bracket?.game"
         :bracket-id="bracket?.id"
         :is-locked="bracket?.isLocked"
+        :bracket-status="bracket?.status"
+        :can-change-status="canChangeStatus"
+        :has-champion="!!champion"
+        :show-manage-players-button="true"
+        :show-edit-button="true"
         @toggle-sidebar="sidebarOpen = !sidebarOpen"
         @show-scores="handleShowScores"
+        @manage-players="handleManagePlayers"
+        @edit-bracket="handleEditBracket"
+        @change-status="handleChangeStatus"
         @lock-code-change="handleLockCodeChange"
       />
       <main class="p-4">
@@ -21,8 +29,8 @@
         <div v-if="!loading || placements.length > 0" class="inline-block">
           <div class="tournament-bracket">
             <div class="bracket-wrapper">
-              <WinnersBracket :rounds="winnersRounds" :champion="champion" :lock-code="lockCode" />
-              <LosersBracket :rounds="losersRounds" :lock-code="lockCode" />
+              <WinnersBracket :rounds="winnersRounds" :champion="champion" :lock-code="lockCode" :bracket-status="bracket?.status" />
+              <LosersBracket :rounds="losersRounds" :lock-code="lockCode" :bracket-status="bracket?.status" />
             </div>
           </div>
         </div>
@@ -30,12 +38,40 @@
     </div>
 
     <BracketScore ref="bracketScoreRef" :bracket-id="bracket?.id" />
+
+    <!-- Status Change Confirmation Modal -->
+    <Teleport to="body">
+      <ConfirmModal
+        id="change-status-modal"
+        :modal-open="showStatusConfirm"
+        :title="statusChangeModalTitle"
+        :message="statusChangeModalMessage"
+        :confirm-text="statusChangeConfirmText"
+        cancel-text="Cancel"
+        @confirm="confirmStatusChange"
+        @cancel="showStatusConfirm = false"
+      />
+    </Teleport>
+
+    <!-- No Champion Error Modal -->
+    <Teleport to="body">
+      <ConfirmModal
+        id="no-champion-error-modal"
+        :modal-open="showNoChampionError"
+        title="Cannot Complete Bracket"
+        message="Cannot complete the bracket yet. A champion must be determined first."
+        confirm-text="OK"
+        :show-cancel="false"
+        @confirm="showNoChampionError = false"
+        @cancel="showNoChampionError = false"
+      />
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, provide } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, onMounted, computed, provide, inject } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { bracketPlacementService } from '@/services/bracketPlacementService';
 import { bracketService } from '@/services/bracketService';
 
@@ -44,12 +80,16 @@ import Header from '@/partials/Header.vue';
 import WinnersBracket from '@/components/WinnersBracket.vue';
 import LosersBracket from '@/components/LosersBracket.vue';
 import BracketScore from '@/components/BracketScore.vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 import { type BracketPlacement } from '@/models/BracketPlacement';
 import { type BracketPosition } from '@/models/BracketPosition';
 import { type Bracket } from '@/models/Bracket';
+import type { useNotification } from '@/composables/useNotification';
 
 const route = useRoute();
+const router = useRouter();
+const notification = inject<ReturnType<typeof useNotification>>('notification');
 const bracket = ref<Bracket>();
 const placements = ref<BracketPlacement[]>([]);
 const positions = ref<BracketPosition[]>([]);
@@ -60,6 +100,9 @@ const isRefreshing = ref(false);
 const bracketScoreRef = ref<InstanceType<typeof BracketScore>>();
 const headerRef = ref<InstanceType<typeof Header>>();
 const lockCode = ref<string>();
+const showStatusConfirm = ref(false);
+const showNoChampionError = ref(false);
+const nextStatus = ref<string>('');
 
 interface MatchWithData extends BracketPosition {
   player1Data: BracketPlacement | null;
@@ -103,6 +146,41 @@ const winnersRounds = computed(() => {
 
 const losersRounds = computed(() => {
   return buildRounds(losersMatches.value);
+});
+
+const canChangeStatus = computed(() => {
+  const status = bracket.value?.status;
+  return status === 'Setup' || status === 'Started';
+});
+
+const statusChangeModalTitle = computed(() => {
+  if (bracket.value?.status === 'Setup') {
+    return 'Start Bracket';
+  } else if (bracket.value?.status === 'Started') {
+    return 'Complete Bracket';
+  }
+  return 'Change Status';
+});
+
+const statusChangeModalMessage = computed(() => {
+  if (bracket.value?.status === 'Setup') {
+    return 'Are you sure you want to start this bracket? Once started, the bracket structure cannot be modified.';
+  } else if (bracket.value?.status === 'Started') {
+    if (!champion.value) {
+      return 'Cannot complete the bracket yet. A champion must be determined first.';
+    }
+    return `Are you sure you want to complete this bracket? The winner is ${champion.value.playerName}.`;
+  }
+  return '';
+});
+
+const statusChangeConfirmText = computed(() => {
+  if (bracket.value?.status === 'Setup') {
+    return 'Start Bracket';
+  } else if (bracket.value?.status === 'Started') {
+    return 'Complete Bracket';
+  }
+  return 'Confirm';
 });
 
 function buildRounds(matches: BracketPosition[]): MatchWithData[][] {
@@ -206,8 +284,59 @@ const handleShowScores = () => {
   bracketScoreRef.value?.showScores();
 };
 
+const handleManagePlayers = () => {
+  if (bracket.value?.id) {
+    router.push({ name: 'bracket-manage-users', params: { id: bracket.value.id } });
+  }
+};
+
+const handleEditBracket = () => {
+  if (bracket.value?.id) {
+    router.push({ name: 'bracket-edit', params: { id: bracket.value.id } });
+  }
+};
+
 const handleLockCodeChange = (code: string) => {
   lockCode.value = code;
+};
+
+const handleChangeStatus = () => {
+  if (!bracket.value) return;
+
+  // Determine next status
+  if (bracket.value.status === 'Setup') {
+    nextStatus.value = 'Started';
+    showStatusConfirm.value = true;
+  } else if (bracket.value.status === 'Started') {
+    if (!champion.value) {
+      showNoChampionError.value = true;
+      return;
+    }
+    nextStatus.value = 'Completed';
+    showStatusConfirm.value = true;
+  }
+};
+
+const confirmStatusChange = async () => {
+  if (!bracket.value) return;
+
+  showStatusConfirm.value = false;
+
+  try {
+    const bracketId = bracket.value.id;
+    await bracketService.changeStatus(bracketId, nextStatus.value, lockCode.value);
+
+    // Reload bracket data to get updated status
+    await loadData();
+
+    notification?.success('Bracket status updated successfully!');
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to change bracket status';
+    if (errorMessage.includes('lock code')) {
+      headerRef.value?.showLockCodeError();
+    }
+    notification?.error(errorMessage);
+  }
 };
 
 onMounted(() => {

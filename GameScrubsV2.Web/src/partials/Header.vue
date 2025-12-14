@@ -41,9 +41,21 @@
 
           <!-- Bracket info -->
           <div v-if="bracketName || game" class="flex flex-col">
-            <h1 v-if="bracketName" class="text-lg font-semibold text-gray-800 dark:text-gray-100">
-              {{ bracketName }}
-            </h1>
+            <div class="flex items-center gap-2">
+              <h1 v-if="bracketName" class="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                {{ bracketName }}
+              </h1>
+              <button
+                v-if="bracketStatus && canChangeStatus"
+                @click.stop="handleStatusClick"
+                :class="[getStatusBadgeClass(bracketStatus), 'cursor-pointer hover:opacity-80 transition-opacity']"
+              >
+                {{ bracketStatus }}
+              </button>
+              <div v-else-if="bracketStatus" :class="getStatusBadgeClass(bracketStatus)">
+                {{ bracketStatus }}
+              </div>
+            </div>
             <p v-if="game" class="text-sm text-gray-500 dark:text-gray-400">
               {{ game }}
             </p>
@@ -85,48 +97,58 @@
               </button>
             </div>
           </div>
-          <div>
-            <button
-              v-if="bracketId"
-              class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 lg:hover:bg-gray-200 dark:hover:bg-gray-700/50 dark:lg:hover:bg-gray-800 rounded-full ml-3"
-              @click="showScores"
-            >
-              <Tooltip position="left">
-                <template #trigger>
-                  <IconScoreboard
-                    :size="20"
-                    :stroke-width="1.5"
-                    class="text-gray-500 dark:text-gray-400"
-                  />
-                </template>
-                <div class="text-xs whitespace-nowrap">Bracket Scores</div>
-              </Tooltip>
-            </button>
-          </div>
-          <div>
-            <button
-              class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 lg:hover:bg-gray-200 dark:hover:bg-gray-700/50 dark:lg:hover:bg-gray-800 rounded-full ml-3"
-              :class="{ 'bg-gray-200 dark:bg-gray-800': searchModalOpen }"
-              @click.stop="searchModalOpen = true"
-              aria-controls="search-modal"
-            >
-              <span class="sr-only">Search</span>
-              <IconSearch :size="20" :stroke-width="1.5" class="text-gray-500 dark:text-gray-400" />
-            </button>
-            <SearchModal
-              id="search-modal"
-              searchId="search"
-              :modalOpen="searchModalOpen"
-              @open-modal="searchModalOpen = true"
-              @close-modal="searchModalOpen = false"
-            />
-          </div>
-          <Notifications align="right" />
-          <Help align="right" />
+          <!-- Manage Players Button -->
+          <button
+            v-if="bracketId && showManagePlayersButton"
+            class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 lg:hover:bg-gray-200 dark:hover:bg-gray-700/50 dark:lg:hover:bg-gray-800 rounded-full"
+            @click="managePlayers"
+          >
+            <Tooltip position="left">
+              <template #trigger>
+                <IconUsers
+                  :size="20"
+                  :stroke-width="1.5"
+                  class="text-gray-500 dark:text-gray-400"
+                />
+              </template>
+              <div class="text-xs whitespace-nowrap">Manage Players</div>
+            </Tooltip>
+          </button>
+          <!-- Edit Bracket Button -->
+          <button
+            v-if="bracketId && showEditButton"
+            class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 lg:hover:bg-gray-200 dark:hover:bg-gray-700/50 dark:lg:hover:bg-gray-800 rounded-full"
+            @click="editBracket"
+          >
+            <Tooltip position="left">
+              <template #trigger>
+                <IconSettings
+                  :size="20"
+                  :stroke-width="1.5"
+                  class="text-gray-500 dark:text-gray-400"
+                />
+              </template>
+              <div class="text-xs whitespace-nowrap">Edit Bracket</div>
+            </Tooltip>
+          </button>
+          <!-- Scoreboard Button -->
+          <button
+            v-if="bracketId && showScoreboardButton"
+            class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 lg:hover:bg-gray-200 dark:hover:bg-gray-700/50 dark:lg:hover:bg-gray-800 rounded-full"
+            @click="showScores"
+          >
+            <Tooltip position="left">
+              <template #trigger>
+                <IconScoreboard
+                  :size="20"
+                  :stroke-width="1.5"
+                  class="text-gray-500 dark:text-gray-400"
+                />
+              </template>
+              <div class="text-xs whitespace-nowrap">Bracket Scores</div>
+            </Tooltip>
+          </button>
           <ThemeToggle />
-          <!-- Divider -->
-          <hr class="w-px h-6 bg-gray-200 dark:bg-gray-700/60 border-none" />
-          <UserMenu align="right" />
         </div>
       </div>
     </div>
@@ -135,12 +157,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-//import SearchModal from '../components/ModalSearch.vue'
-//import Notifications from '../components/DropdownNotifications.vue'
-//import Help from '../components/DropdownHelp.vue'
 import ThemeToggle from '../components/ThemeToggle.vue';
-import { IconScoreboard, IconSearch, IconLock, IconEye, IconEyeOff } from '@tabler/icons-vue';
-//import UserMenu from '../components/DropdownProfile.vue'
+import { IconScoreboard, IconSettings, IconUsers, IconLock, IconEye, IconEyeOff } from '@tabler/icons-vue';
 import Tooltip from '@/components/Tooltip.vue';
 
 interface Props {
@@ -150,19 +168,33 @@ interface Props {
   game?: string;
   bracketId?: number;
   isLocked?: boolean;
+  bracketStatus?: string;
+  canChangeStatus?: boolean;
+  hasChampion?: boolean;
+  showScoreboardButton?: boolean;
+  showEditButton?: boolean;
+  showManagePlayersButton?: boolean;
 }
 
-defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  showScoreboardButton: true,
+  showEditButton: false,
+  showManagePlayersButton: false,
+  canChangeStatus: false,
+  hasChampion: false,
+});
 
 interface Emits {
   (e: 'toggle-sidebar'): void;
   (e: 'show-scores'): void;
+  (e: 'edit-bracket'): void;
+  (e: 'manage-players'): void;
+  (e: 'change-status'): void;
   (e: 'lock-code-change', lockCode: string): void;
 }
 
 const emit = defineEmits<Emits>();
 
-const searchModalOpen = ref<boolean>(false);
 const lockCodeInput = ref<string>('');
 const lockCodeError = ref<boolean>(false);
 const lockCodeInputRef = ref<HTMLInputElement>();
@@ -170,6 +202,18 @@ const showLockCode = ref<boolean>(false);
 
 const showScores = () => {
   emit('show-scores');
+};
+
+const editBracket = () => {
+  emit('edit-bracket');
+};
+
+const managePlayers = () => {
+  emit('manage-players');
+};
+
+const handleStatusClick = () => {
+  emit('change-status');
 };
 
 const handleLockCodeChange = () => {
@@ -185,6 +229,23 @@ const showLockCodeError = () => {
   setTimeout(() => {
     lockCodeError.value = false;
   }, 500);
+};
+
+const getStatusBadgeClass = (status: string) => {
+  const baseClasses = 'text-xs px-2.5 py-1 rounded-full shadow-none';
+
+  switch (status) {
+    case 'Setup':
+      return `${baseClasses} bg-blue-500/20 text-blue-600 dark:text-blue-400`;
+    case 'Started':
+      return `${baseClasses} bg-green-500/20 text-green-600 dark:text-green-400`;
+    case 'OnHold':
+      return `${baseClasses} bg-yellow-500/20 text-yellow-600 dark:text-yellow-400`;
+    case 'Completed':
+      return `${baseClasses} bg-gray-500/20 text-gray-600 dark:text-gray-400`;
+    default:
+      return `${baseClasses} bg-gray-500/20 text-gray-600 dark:text-gray-400`;
+  }
 };
 
 defineExpose({ showLockCodeError });

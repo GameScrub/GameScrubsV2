@@ -14,6 +14,13 @@ export default defineConfig({
     port: 5176, // or whatever port you want
     strictPort: true, // fail if port is already in use
     host: true, // expose to network if needed
+    proxy: {
+      '/api': {
+        target: 'https://localhost:7291',
+        changeOrigin: true,
+        secure: false, // ignore SSL certificate errors
+      },
+    },
   },
   resolve: {
     alias: {

@@ -1,7 +1,6 @@
 export enum BracketStatus {
-  Pending = 'Pending',
+  Setup = 'Setup',
   Started = 'Started',
-  InProgress = 'InProgress',
+  OnHold = 'OnHold',
   Completed = 'Completed',
-  Cancelled = 'Cancelled',
 }

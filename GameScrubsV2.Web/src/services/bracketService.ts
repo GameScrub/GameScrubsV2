@@ -24,8 +24,17 @@ export const bracketService = {
   },
 
   // POST create new item
-  async create(item: Omit<Bracket, 'id' | 'createdAt'>): Promise<Bracket> {
-    const response = await fetch(`${API_BASE_URL}/items`, {
+  async create(item: {
+    name: string;
+    game: string;
+    type: string;
+    competition: string;
+    startDate: string;
+    email?: string;
+    url?: string;
+    lockCode?: string;
+  }): Promise<Bracket> {
+    const response = await fetch(`${API_BASE_URL}/brackets`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(item),
@@ -38,8 +47,25 @@ export const bracketService = {
   },
 
   // PUT update item
-  async update(id: number, item: Partial<Bracket>): Promise<Bracket> {
-    const response = await fetch(`${API_BASE_URL}/items/${id}`, {
+  async update(
+    item: {
+      id: number;
+      name: string;
+      game: string;
+      type: string;
+      competition: string;
+      startDate: string;
+      email?: string;
+      url?: string;
+      lockCode?: string;
+    },
+    lockCode?: string,
+  ): Promise<Bracket> {
+    const url = lockCode
+      ? `${API_BASE_URL}/brackets/${lockCode}`
+      : `${API_BASE_URL}/brackets`;
+
+    const response = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(item),
@@ -60,5 +86,27 @@ export const bracketService = {
       const errorMessage = await getErrorMessage(response);
       throw new Error(errorMessage);
     }
+  },
+
+  // POST change bracket status
+  async changeStatus(
+    bracketId: number,
+    status: string,
+    lockCode?: string,
+  ): Promise<Bracket> {
+    const url = lockCode
+      ? `${API_BASE_URL}/brackets/change-status/${lockCode}`
+      : `${API_BASE_URL}/brackets/change-status`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bracketId, status }),
+    });
+    if (!response.ok) {
+      const errorMessage = await getErrorMessage(response);
+      throw new Error(errorMessage);
+    }
+    return response.json();
   },
 };

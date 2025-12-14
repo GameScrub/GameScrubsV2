@@ -50,7 +50,6 @@ public static partial class BracketEndpoints
 					bracket.LockCode = request.LockCode;
 					bracket.Type = request.Type;
 					bracket.Competition = request.Competition;
-					bracket.Status = request.Status;
 					bracket.Game = request.Game;
 					bracket.Email = request.Email;
 					bracket.StartDate = startDate;
@@ -90,7 +89,7 @@ public static partial class BracketEndpoints
 		public string? Url { get; init; }
 
 		public string? LockCode { get; init; }
-		public required BracketStatus Status { get; init; }
+
 		public required BracketType Type { get; init; }
 		public required CompetitionType Competition { get; init; }
 		public required DateOnly StartDate { get; init; }
@@ -104,7 +103,6 @@ public static partial class BracketEndpoints
 		public required string? Url { get; init; }
 		public required bool IsLocked { get; init; }
 		public required BracketType Type { get; init; }
-		public required BracketStatus Status { get; init; }
 		public required CompetitionType Competition { get; init; }
 		public required DateTime StartDate { get; init; }
 		public required DateTime CreatedDate { get; init; }
@@ -117,7 +115,6 @@ public static partial class BracketEndpoints
 			Url = data.Url,
 			IsLocked = data.IsLocked,
 			Type = data.Type,
-			Status = data.Status,
 			Competition = data.Competition,
 			StartDate = data.StartDate,
 			CreatedDate = data.CreatedDate

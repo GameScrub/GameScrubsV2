@@ -50,7 +50,9 @@ public static partial class PlayerEndpoints
 								 request.PlayerIds.AsEnumerable().Contains(player.Id))
 				.ToListAsync(cancellationToken);
 
-			if (players.Count != request.PlayerIds.Length)
+			var playerIds = request.PlayerIds.Where(playerId => playerId != 0).ToList();
+
+			if (players.Count != playerIds.Count)
 			{
 				return Results.BadRequest(new MessageResponse("Invalid player ids"));
 			}
