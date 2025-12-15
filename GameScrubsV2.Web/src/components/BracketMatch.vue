@@ -81,8 +81,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject } from 'vue';
+import { ref, inject, computed } from 'vue';
 import { bracketPlacementService } from '@/services/bracketPlacementService';
+import { useBracketStore } from '@/stores/bracket';
 import { type BracketPlacement } from '@/models/BracketPlacement';
 import { PlacementStatus } from '@/models/PlacementStatus';
 import ModalEmpty from '@/components/ModalEmpty.vue';
@@ -92,25 +93,44 @@ interface Props {
   player1: BracketPlacement | null;
   player2: BracketPlacement | null;
   showScores?: boolean;
-  lockCode?: string;
   bracketStatus?: string;
 }
 
 const notification = inject<ReturnType<typeof useNotification>>('notification');
 const refreshBracket = inject<() => Promise<void>>('refreshBracket');
 const showLockCodeError = inject<() => void>('showLockCodeError');
+const bracketStore = useBracketStore();
 
 const props = withDefaults(defineProps<Props>(), {
   showScores: false,
 });
 
+// Get lock code from store based on bracket ID
+const lockCode = computed(() => {
+  const bracketId = props.player1?.bracketId || props.player2?.bracketId;
+  return bracketId ? bracketStore.getLockCode(bracketId) : undefined;
+});
+
 const isModalOpen = ref(false);
 
 const openModal = () => {
+  // Don't open modal if bracket is in Setup status
+  if (props.bracketStatus === 'Setup') {
+    notification?.error('Bracket status must be set to "Started" before selecting winners.');
+    return;
+  }
+
   // Don't open modal if bracket is completed
   if (props.bracketStatus === 'Completed') {
     return;
   }
+
+  // Don't open modal if one or both players are missing
+  if (!props.player1 || !props.player2) {
+    notification?.error('Previous match must be completed before selecting a winner.');
+    return;
+  }
+
   isModalOpen.value = true;
 };
 
@@ -120,7 +140,7 @@ const closeModal = () => {
 
 const setWinner = async (player: BracketPlacement) => {
   try {
-    await bracketPlacementService.setBracketPlacement(player.bracketId, player.id, props.lockCode);
+    await bracketPlacementService.setBracketPlacement(player.bracketId, player.id, lockCode.value);
     notification?.success('Bracket scores updated');
     closeModal();
 

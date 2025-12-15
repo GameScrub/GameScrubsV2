@@ -6,6 +6,7 @@
       <Header
         ref="headerRef"
         :sidebarOpen="sidebarOpen"
+        :variant="HeaderVariant.Bracket"
         :bracket-name="bracket?.name"
         :game="bracket?.game"
         :bracket-id="bracket?.id"
@@ -17,10 +18,7 @@
         :show-edit-button="true"
         @toggle-sidebar="sidebarOpen = !sidebarOpen"
         @show-scores="handleShowScores"
-        @manage-players="handleManagePlayers"
-        @edit-bracket="handleEditBracket"
         @change-status="handleChangeStatus"
-        @lock-code-change="handleLockCodeChange"
       />
       <main class="p-4">
         <div v-if="loading && placements.length === 0">Loading...</div>
@@ -29,8 +27,8 @@
         <div v-if="!loading || placements.length > 0" class="inline-block">
           <div class="tournament-bracket">
             <div class="bracket-wrapper">
-              <WinnersBracket :rounds="winnersRounds" :champion="champion" :lock-code="lockCode" :bracket-status="bracket?.status" />
-              <LosersBracket :rounds="losersRounds" :lock-code="lockCode" :bracket-status="bracket?.status" />
+              <WinnersBracket :rounds="winnersRounds" :champion="champion" :bracket-status="bracket?.status" />
+              <LosersBracket :rounds="losersRounds" :bracket-status="bracket?.status" />
             </div>
           </div>
         </div>
@@ -71,7 +69,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, provide, inject } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { bracketPlacementService } from '@/services/bracketPlacementService';
 import { bracketService } from '@/services/bracketService';
 
@@ -85,11 +83,14 @@ import ConfirmModal from '@/components/ConfirmModal.vue';
 import { type BracketPlacement } from '@/models/BracketPlacement';
 import { type BracketPosition } from '@/models/BracketPosition';
 import { type Bracket } from '@/models/Bracket';
+import { HeaderVariant } from '@/models/HeaderVariant';
 import type { useNotification } from '@/composables/useNotification';
+import { useBracketStore } from '@/stores/bracket';
 
 const route = useRoute();
-const router = useRouter();
 const notification = inject<ReturnType<typeof useNotification>>('notification');
+const bracketStore = useBracketStore();
+
 const bracket = ref<Bracket>();
 const placements = ref<BracketPlacement[]>([]);
 const positions = ref<BracketPosition[]>([]);
@@ -99,7 +100,6 @@ const sidebarOpen = ref(false);
 const isRefreshing = ref(false);
 const bracketScoreRef = ref<InstanceType<typeof BracketScore>>();
 const headerRef = ref<InstanceType<typeof Header>>();
-const lockCode = ref<string>();
 const showStatusConfirm = ref(false);
 const showNoChampionError = ref(false);
 const nextStatus = ref<string>('');
@@ -284,22 +284,6 @@ const handleShowScores = () => {
   bracketScoreRef.value?.showScores();
 };
 
-const handleManagePlayers = () => {
-  if (bracket.value?.id) {
-    router.push({ name: 'bracket-manage-users', params: { id: bracket.value.id } });
-  }
-};
-
-const handleEditBracket = () => {
-  if (bracket.value?.id) {
-    router.push({ name: 'bracket-edit', params: { id: bracket.value.id } });
-  }
-};
-
-const handleLockCodeChange = (code: string) => {
-  lockCode.value = code;
-};
-
 const handleChangeStatus = () => {
   if (!bracket.value) return;
 
@@ -324,9 +308,8 @@ const confirmStatusChange = async () => {
 
   try {
     const bracketId = bracket.value.id;
-    await bracketService.changeStatus(bracketId, nextStatus.value, lockCode.value);
+    await bracketService.changeStatus(bracketId, nextStatus.value, bracketStore.getLockCode(bracketId));
 
-    // Reload bracket data to get updated status
     await loadData();
 
     notification?.success('Bracket status updated successfully!');

@@ -9,14 +9,13 @@
       <Header
         ref="headerRef"
         :sidebarOpen="sidebarOpen"
-        variant="v2"
+        :variant="HeaderVariant.ManagePlayer"
         :bracket-name="bracket?.name"
         :game="bracket?.game"
         :bracket-id="bracket?.id"
         :is-locked="bracket?.isLocked"
         :show-scoreboard-button="false"
         @toggle-sidebar="sidebarOpen = !sidebarOpen"
-        @lock-code-change="handleLockCodeChange"
       />
 
       <!-- Main content -->
@@ -84,9 +83,22 @@
 
           <!-- Players List -->
           <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
-              Player Seeding (Drag to Reorder)
-            </h2>
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                Player Seeding (Drag to Reorder)
+              </h2>
+              <button
+                v-if="displayPlayers.length > 0"
+                type="button"
+                @click="handleRandomize"
+                :disabled="isSubmitting || isFormDisabled"
+                class="flex items-center gap-2 px-3 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                title="Randomize player order"
+              >
+                <IconReload :size="16" :stroke-width="2" />
+                Randomize
+              </button>
+            </div>
 
             <div v-if="displayPlayers.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
               No players added yet. Add your first player above.
@@ -105,11 +117,10 @@
                 <div
                   :class="[
                     'flex items-center gap-3 p-4 rounded-lg border transition-colors',
-                    element.id === 0
-                      ? 'bg-gray-100 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600 opacity-60'
-                      : index % 2 === 0
-                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 hover:border-blue-400 dark:hover:border-blue-500'
-                        : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500',
+                    index % 2 === 0
+                      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 hover:border-blue-400 dark:hover:border-blue-500'
+                      : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500',
+                    element.id === 0 ? 'opacity-60' : '',
                     index % 2 === 1 ? 'mb-4' : ''
                   ]"
                 >
@@ -232,9 +243,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, inject, type Ref } from 'vue';
+import { ref, computed, onMounted, inject, nextTick, type Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import draggable from 'vuedraggable';
+import { IconReload } from '@tabler/icons-vue';
 import Sidebar from '@/partials/Sidebar.vue';
 import Header from '@/partials/Header.vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
@@ -242,20 +254,22 @@ import { bracketService } from '@/services/bracketService';
 import { playerService } from '@/services/playerService';
 import { type Bracket } from '@/models/Bracket';
 import { type Player } from '@/models/Player';
+import { HeaderVariant } from '@/models/HeaderVariant';
 import type { useNotification } from '@/composables/useNotification';
+import { useBracketStore } from '@/stores/bracket';
 
 const route = useRoute();
 const router = useRouter();
 const notification = inject<ReturnType<typeof useNotification>>('notification');
 const sidebarOpen: Ref<boolean> = ref(false);
 const headerRef = ref<InstanceType<typeof Header>>();
+const bracketStore = useBracketStore();
 
 const bracket = ref<Bracket>();
 const players = ref<Player[]>([]);
 const displayPlayers = ref<Player[]>([]); // Local array for drag-and-drop
 const originalPlayerOrder = ref<number[]>([]);
 const newPlayerName = ref('');
-const lockCode = ref<string>();
 
 const isSubmitting = ref(false);
 const isReverting = ref(false);
@@ -331,7 +345,7 @@ async function handleAddPlayer() {
       bracket.value.id,
       newPlayerName.value.trim(),
       players.value.length,
-      lockCode.value,
+      bracketStore.getLockCode(bracket.value.id),
     );
 
     notification?.success('Player added successfully!');
@@ -360,7 +374,7 @@ async function confirmRemovePlayer() {
   isSubmitting.value = true;
 
   try {
-    await playerService.remove(bracket.value.id, playerToRemove.value, lockCode.value);
+    await playerService.remove(bracket.value.id, playerToRemove.value, bracketStore.getLockCode(bracket.value.id));
 
     notification?.success('Player removed successfully!');
     await loadData();
@@ -389,7 +403,7 @@ async function handleSaveOrder() {
   try {
     // Map displayPlayers to IDs, where 0 represents a bye
     const playerIds = displayPlayers.value.map((p) => p.id);
-    await playerService.reorder(bracket.value.id, playerIds, lockCode.value);
+    await playerService.reorder(bracket.value.id, playerIds, bracketStore.getLockCode(bracket.value.id));
 
     notification?.success('Player order saved successfully!');
     originalPlayerOrder.value = playerIds;
@@ -402,6 +416,40 @@ async function handleSaveOrder() {
   } finally {
     isSubmitting.value = false;
   }
+}
+
+async function handleRandomize() {
+  // Save current scroll position
+  const scrollY = window.scrollY;
+  const scrollX = window.scrollX;
+
+  // Clear the array first to prevent any reactivity issues
+  displayPlayers.value = [];
+
+  // Wait for Vue to process the clear
+  await nextTick();
+
+  // Get a fresh snapshot from playersWithByes computed and create deep copies
+  const freshSnapshot = playersWithByes.value.map(p => ({ ...p }));
+
+  // Fisher-Yates shuffle algorithm
+  for (let i = freshSnapshot.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = freshSnapshot[i];
+    if (temp && freshSnapshot[j]) {
+      freshSnapshot[i] = freshSnapshot[j];
+      freshSnapshot[j] = temp;
+    }
+  }
+
+  // Set the shuffled array
+  displayPlayers.value = freshSnapshot;
+
+  // Restore scroll position
+  await nextTick();
+  window.scrollTo(scrollX, scrollY);
+
+  notification?.success('Player order randomized!');
 }
 
 function handleRevertToSetup() {
@@ -418,7 +466,7 @@ async function confirmRevertToSetup() {
     const updatedBracket = await bracketService.changeStatus(
       bracket.value.id,
       'Setup',
-      lockCode.value
+      bracketStore.getLockCode(bracket.value.id)
     );
 
     // Update local bracket state
@@ -438,9 +486,5 @@ async function confirmRevertToSetup() {
 
 function handleBack() {
   router.push({ name: 'bracket', params: { id: bracket.value?.id } });
-}
-
-function handleLockCodeChange(code: string) {
-  lockCode.value = code;
 }
 </script>

@@ -9,7 +9,7 @@
       <Header
         ref="headerRef"
         :sidebarOpen="sidebarOpen"
-        variant="v2"
+        :variant="HeaderVariant.Bracket"
         :bracket-name="isEditMode ? 'Edit Bracket' : 'Create Bracket'"
         :bracket-id="isEditMode ? parseInt(route.params.id as string) : undefined"
         :is-locked="bracket?.isLocked"
@@ -284,6 +284,7 @@ import { bracketService } from '@/services/bracketService';
 import { BracketType } from '@/models/BracketType';
 import { Competition } from '@/models/Competition';
 import type { useNotification } from '@/composables/useNotification';
+import { HeaderVariant } from '@/models/HeaderVariant';
 
 const notification = inject<ReturnType<typeof useNotification>>('notification');
 

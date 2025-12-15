@@ -2,18 +2,16 @@
   <header
     class="sticky top-0 before:absolute before:inset-0 before:backdrop-blur-md max-lg:before:bg-white/90 dark:max-lg:before:bg-gray-800/90 before:-z-10 z-30"
     :class="[
-      variant === 'v2' || variant === 'v3'
-        ? 'before:bg-white after:absolute after:h-px after:inset-x-0 after:top-full after:bg-gray-200 dark:after:bg-gray-700/60 after:-z-10'
+      variant === HeaderVariant.ManagePlayer
+        ? 'before:bg-white after:absolute after:h-px after:inset-x-0 after:top-full after:bg-gray-200 dark:after:bg-gray-700/60 after:-z-10 dark:before:bg-gray-800'
         : 'max-lg:shadow-xs lg:before:bg-gray-100/90 dark:lg:before:bg-gray-900/90',
-      variant === 'v2' ? 'dark:before:bg-gray-800' : '',
-      variant === 'v3' ? 'dark:before:bg-gray-900' : '',
     ]"
   >
     <div class="px-4 sm:px-6 lg:px-8">
       <div
         class="flex items-center justify-between h-16"
         :class="
-          variant === 'v2' || variant === 'v3'
+          variant === HeaderVariant.ManagePlayer
             ? ''
             : 'lg:border-b border-gray-200 dark:border-gray-700/60'
         "
@@ -156,14 +154,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import ThemeToggle from '../components/ThemeToggle.vue';
 import { IconScoreboard, IconSettings, IconUsers, IconLock, IconEye, IconEyeOff } from '@tabler/icons-vue';
 import Tooltip from '@/components/Tooltip.vue';
+import { useBracketStore } from '@/stores/bracket';
+import { HeaderVariant } from '@/models/HeaderVariant';
 
 interface Props {
   sidebarOpen: boolean;
-  variant?: 'v1' | 'v2' | 'v3';
+  variant?: HeaderVariant;
   bracketName?: string;
   game?: string;
   bracketId?: number;
@@ -187,29 +188,46 @@ const props = withDefaults(defineProps<Props>(), {
 interface Emits {
   (e: 'toggle-sidebar'): void;
   (e: 'show-scores'): void;
-  (e: 'edit-bracket'): void;
-  (e: 'manage-players'): void;
   (e: 'change-status'): void;
-  (e: 'lock-code-change', lockCode: string): void;
 }
 
 const emit = defineEmits<Emits>();
+const router = useRouter();
+const bracketStore = useBracketStore();
 
 const lockCodeInput = ref<string>('');
 const lockCodeError = ref<boolean>(false);
 const lockCodeInputRef = ref<HTMLInputElement>();
 const showLockCode = ref<boolean>(false);
 
+// Restore lock code from store whenever bracketId changes
+watch(() => props.bracketId, (newBracketId) => {
+  if (newBracketId) {
+    const storedLockCode = bracketStore.getLockCode(newBracketId);
+    if (storedLockCode) {
+      lockCodeInput.value = storedLockCode;
+    } else {
+      lockCodeInput.value = '';
+    }
+  } else {
+    lockCodeInput.value = '';
+  }
+}, { immediate: true });
+
 const showScores = () => {
   emit('show-scores');
 };
 
 const editBracket = () => {
-  emit('edit-bracket');
+  if (props.bracketId) {
+    router.push({ name: 'bracket-edit', params: { id: props.bracketId } });
+  }
 };
 
 const managePlayers = () => {
-  emit('manage-players');
+  if (props.bracketId) {
+    router.push({ name: 'bracket-manage-users', params: { id: props.bracketId } });
+  }
 };
 
 const handleStatusClick = () => {
@@ -217,8 +235,11 @@ const handleStatusClick = () => {
 };
 
 const handleLockCodeChange = () => {
-  lockCodeError.value = false; // Clear error when user types
-  emit('lock-code-change', lockCodeInput.value);
+  lockCodeError.value = false;
+
+  if (props.bracketId && lockCodeInput.value) {
+    bracketStore.setLockCode(props.bracketId, lockCodeInput.value);
+  }
 };
 
 const showLockCodeError = () => {

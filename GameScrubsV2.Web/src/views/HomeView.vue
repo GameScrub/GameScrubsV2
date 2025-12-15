@@ -8,7 +8,7 @@
       <!-- Header -->
       <Header
         :sidebarOpen="sidebarOpen"
-        variant="v2"
+        :variant="HeaderVariant.Bracket"
         @toggle-sidebar="sidebarOpen = !sidebarOpen"
       />
 
@@ -24,6 +24,7 @@
 import { ref, type Ref } from 'vue';
 import Sidebar from '@/partials/Sidebar.vue';
 import Header from '@/partials/Header.vue';
+import { HeaderVariant } from '@/models/HeaderVariant';
 
 const sidebarOpen: Ref<boolean> = ref(false);
 </script>

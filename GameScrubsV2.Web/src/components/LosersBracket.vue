@@ -25,7 +25,6 @@
             :player1="match.player1Data"
             :player2="match.player2Data"
             :show-scores="false"
-            :lock-code="lockCode"
             :bracket-status="bracketStatus"
           />
         </div>
@@ -47,7 +46,6 @@ interface MatchWithData {
 
 interface Props {
   rounds: MatchWithData[][];
-  lockCode?: string;
   bracketStatus?: string;
 }
 
