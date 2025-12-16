@@ -46,7 +46,12 @@
 <script setup lang="ts">
 import { useDark } from '@vueuse/core';
 
+// Initialize with dark mode as default for first-time visitors
+// Disable 'auto' mode to ensure consistent behavior
 const isDark = useDark({
   selector: 'html',
+  initialValue: 'dark',
+  storageKey: 'vueuse-color-scheme',
+  disableTransition: false,
 });
 </script>

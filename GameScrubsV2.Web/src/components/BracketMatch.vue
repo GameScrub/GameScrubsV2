@@ -131,6 +131,30 @@ const openModal = () => {
     return;
   }
 
+  // Auto-select winner if one or both players are byes
+  const player1IsBye = props.player1.playerName === '--';
+  const player2IsBye = props.player2.playerName === '--';
+
+  if (player1IsBye || player2IsBye) {
+    // If both are byes, select player1
+    if (player1IsBye && player2IsBye) {
+      setWinner(props.player1);
+      return;
+    }
+
+    // If only player2 is bye, select player1
+    if (player2IsBye) {
+      setWinner(props.player1);
+      return;
+    }
+
+    // If only player1 is bye, select player2
+    if (player1IsBye) {
+      setWinner(props.player2);
+      return;
+    }
+  }
+
   isModalOpen.value = true;
 };
 

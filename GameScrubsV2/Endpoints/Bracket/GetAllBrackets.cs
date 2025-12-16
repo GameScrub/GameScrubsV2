@@ -9,7 +9,7 @@ namespace GameScrubsV2.Endpoints.Bracket;
 public static partial class BracketEndpoints
 {
 	public static void GetAllBrackets(this RouteGroupBuilder group) =>
-		group.MapGet("/", async (
+		group.MapPost("/search", async (
 				[FromBody] GetAllBracketsRequest? request,
 				[FromServices] BracketRepository bracketRepository,
 				ILoggerFactory loggerFactory,

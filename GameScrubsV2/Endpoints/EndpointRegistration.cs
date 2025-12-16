@@ -2,6 +2,7 @@ using GameScrubsV2.Endpoints.Auth;
 using GameScrubsV2.Endpoints.Bracket;
 using GameScrubsV2.Endpoints.Placement;
 using GameScrubsV2.Endpoints.Player;
+using GameScrubsV2.Endpoints.Report;
 
 namespace GameScrubsV2.Endpoints;
 
@@ -14,7 +15,8 @@ public static class EndpointRegistration
 				.MapAuthEndpoints()
 				.MapBracketEndpoints()
 				.MapPlayerEndpoints()
-				.MapBracketPlacementEndpoints();
+				.MapBracketPlacementEndpoints()
+				.MapDashboardEndpoints();
 
 		private IEndpointRouteBuilder MapAuthEndpoints()
 		{
@@ -64,6 +66,17 @@ public static class EndpointRegistration
 			group.GetPlacementPositions();
 
 			return app;
+		}
+
+		private IEndpointRouteBuilder MapDashboardEndpoints()
+		{
+			var group = app.MapGroup("/api/reports").WithTags("Reports");
+
+			group.GetRecentActivity();
+
+			return app;
+
+
 		}
 	}
 }

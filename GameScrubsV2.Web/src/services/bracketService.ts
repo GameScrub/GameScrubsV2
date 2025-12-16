@@ -3,9 +3,33 @@ import { type Bracket } from '@/models/Bracket';
 import { getErrorMessage } from './apiErrorHandler';
 
 export const bracketService = {
-  // GET all items
-  async getAll(): Promise<Bracket[]> {
-    const response = await fetch(`${API_BASE_URL}/brackets`);
+  // GET all items with optional pagination and filters
+  async search(params?: {
+    pageNumber?: number;
+    pageSize?: number;
+    name?: string;
+    game?: string;
+    type?: string;
+    status?: string;
+    competition?: string;
+  }): Promise<Bracket[]> {
+    const body: any = {};
+
+    if (params) {
+      if (params.pageNumber !== undefined) body.pageNumber = params.pageNumber;
+      if (params.pageSize !== undefined) body.pageSize = params.pageSize;
+      if (params.name) body.name = params.name;
+      if (params.game) body.game = params.game;
+      if (params.type) body.type = params.type;
+      if (params.status) body.status = params.status;
+      if (params.competition) body.competition = params.competition;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/brackets/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
+    });
     if (!response.ok) {
       const errorMessage = await getErrorMessage(response);
       throw new Error(errorMessage);
@@ -61,9 +85,7 @@ export const bracketService = {
     },
     lockCode?: string,
   ): Promise<Bracket> {
-    const url = lockCode
-      ? `${API_BASE_URL}/brackets/${lockCode}`
-      : `${API_BASE_URL}/brackets`;
+    const url = lockCode ? `${API_BASE_URL}/brackets/${lockCode}` : `${API_BASE_URL}/brackets`;
 
     const response = await fetch(url, {
       method: 'PUT',
@@ -89,11 +111,7 @@ export const bracketService = {
   },
 
   // POST change bracket status
-  async changeStatus(
-    bracketId: number,
-    status: string,
-    lockCode?: string,
-  ): Promise<Bracket> {
+  async changeStatus(bracketId: number, status: string, lockCode?: string): Promise<Bracket> {
     const url = lockCode
       ? `${API_BASE_URL}/brackets/change-status/${lockCode}`
       : `${API_BASE_URL}/brackets/change-status`;

@@ -15,7 +15,6 @@
         :is-locked="bracket?.isLocked"
         :show-scoreboard-button="false"
         @toggle-sidebar="sidebarOpen = !sidebarOpen"
-        @lock-code-change="handleLockCodeChange"
       />
 
       <!-- Main content -->
@@ -285,6 +284,7 @@ import { BracketType } from '@/models/BracketType';
 import { Competition } from '@/models/Competition';
 import type { useNotification } from '@/composables/useNotification';
 import { HeaderVariant } from '@/models/HeaderVariant';
+import { useBracketStore } from '@/stores/bracket';
 
 const notification = inject<ReturnType<typeof useNotification>>('notification');
 
@@ -292,9 +292,9 @@ const route = useRoute();
 const router = useRouter();
 const sidebarOpen: Ref<boolean> = ref(false);
 const headerRef = ref<InstanceType<typeof Header>>();
+const bracketStore = useBracketStore();
 
 const bracket = ref<{ isLocked: boolean; status: string }>();
-const headerLockCode = ref<string>();
 
 const isEditMode = computed(() => !!route.params.id);
 const isSubmitting = ref(false);
@@ -380,10 +380,6 @@ async function loadBracket() {
   }
 }
 
-function handleLockCodeChange(code: string) {
-  headerLockCode.value = code;
-}
-
 async function handleSubmit() {
   isSubmitting.value = true;
 
@@ -444,7 +440,7 @@ async function updateBracket() {
   };
 
   try {
-    await bracketService.update(payload, headerLockCode.value);
+    await bracketService.update(payload, bracketStore.getLockCode(bracketId));
     notification?.success('Bracket updated successfully!');
     await loadBracket();
   } catch (err) {
@@ -471,7 +467,7 @@ async function confirmRevertToSetup() {
     const updatedBracket = await bracketService.changeStatus(
       bracketId,
       'Setup',
-      headerLockCode.value,
+      bracketStore.getLockCode(bracketId),
     );
 
     // Update local bracket state

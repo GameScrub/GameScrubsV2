@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
@@ -8,6 +8,23 @@
   </head>
   <body class="font-inter antialiased bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400">
     <script>
+        // Set default theme to dark on first visit
+        // VueUse useDark() stores the preference in localStorage with key 'vueuse-color-scheme'
+        const storedTheme = localStorage.getItem('vueuse-color-scheme');
+
+        if (!storedTheme || storedTheme === 'auto') {
+            // First time visitor or auto mode - default to dark
+            // Note: VueUse may set 'auto' initially, we override to 'dark'
+            localStorage.setItem('vueuse-color-scheme', 'dark');
+            document.documentElement.classList.add('dark');
+        } else if (storedTheme === 'dark') {
+            // Returning visitor with dark preference
+            document.documentElement.classList.add('dark');
+        } else {
+            // Returning visitor with light preference
+            document.documentElement.classList.remove('dark');
+        }
+
         if (localStorage.getItem('sidebar-expanded') == 'true') {
             document.querySelector('body').classList.add('sidebar-expanded');
         } else {
