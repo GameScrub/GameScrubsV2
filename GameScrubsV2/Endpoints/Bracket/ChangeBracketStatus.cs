@@ -2,6 +2,7 @@ using GameScrubsV2.Common;
 using GameScrubsV2.Enums;
 using GameScrubsV2.Models;
 using GameScrubsV2.Repositories;
+using GameScrubsV2.Services;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ public static partial class BracketEndpoints
 				[FromRoute] string? lockCode,
 				[FromBody] ChangeBracketStatusRequest request,
 				[FromServices] BracketRepository bracketRepository,
+				[FromServices] IBracketHubService bracketHubService,
 				GameScrubsV2DbContext dbContext,
 				ILoggerFactory loggerFactory,
 				CancellationToken cancellationToken) =>
@@ -105,6 +107,9 @@ public static partial class BracketEndpoints
 							logger.LogError("Invalid bracket status {@BracketStatus}", request.Status);
 							return Results.BadRequest(new MessageResponse("Invalid bracket status"));
 					}
+
+					// Notify clients via SignalR that the bracket status has changed
+					await bracketHubService.NotifyBracketStatusChanged(bracket.Id, bracket.Status.ToString());
 
 					return Results.Ok(ChangeBracketStatusResponse.ToResponseModel(bracket));
 				}

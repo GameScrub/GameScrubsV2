@@ -34,7 +34,7 @@ public static class EndpointRegistration
 		{
 			var group = app.MapGroup("/api/brackets").WithTags("Brackets");
 
-			group.GetAllBrackets();
+			group.SearchBracket();
 			group.GetBracketById();
 			group.CreateBracket();
 			group.UpdateBracket();
@@ -73,10 +73,8 @@ public static class EndpointRegistration
 			var group = app.MapGroup("/api/reports").WithTags("Reports");
 
 			group.GetRecentActivity();
-
+			
 			return app;
-
-
 		}
 	}
 }

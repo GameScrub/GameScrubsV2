@@ -124,11 +124,12 @@
                   </div>
                   <div>
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1">
-                      Real-Time Updates
+                      Live Auto-Refresh
                     </h3>
                     <p class="text-gray-600 dark:text-gray-400 text-sm">
-                      Track matches live with instant bracket updates. Click any match to record
-                      winners and watch the bracket progress automatically.
+                      All viewers see match results instantly without refreshing the page. When a
+                      tournament manager updates a score or bracket status, changes appear automatically
+                      for everyone watching in real-time.
                     </p>
                   </div>
                 </div>

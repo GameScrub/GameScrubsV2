@@ -20,7 +20,59 @@
         @show-scores="handleShowScores"
         @change-status="handleChangeStatus"
       />
-      <main class="p-4">
+
+      <!-- SignalR Connection Indicator -->
+      <div class="px-4 pt-4 pb-2 flex justify-end">
+        <div class="relative group">
+          <div
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all"
+            :class="
+              isSignalRConnected
+                ? 'bg-green-500/10 dark:bg-green-500/20 border border-green-500/30'
+                : 'bg-gray-500/10 dark:bg-gray-500/20 border border-gray-500/30'
+            "
+          >
+            <div class="relative">
+              <div
+                class="w-2 h-2 rounded-full"
+                :class="isSignalRConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'"
+              ></div>
+              <div
+                v-if="isSignalRConnected"
+                class="absolute inset-0 w-2 h-2 bg-green-500 rounded-full animate-ping"
+              ></div>
+            </div>
+            <span
+              class="text-xs font-medium"
+              :class="
+                isSignalRConnected
+                  ? 'text-green-700 dark:text-green-400'
+                  : 'text-gray-700 dark:text-gray-400'
+              "
+            >
+              {{ isSignalRConnected ? 'Live' : 'Offline' }}
+            </span>
+          </div>
+          <!-- Tooltip -->
+          <div
+            class="absolute right-0 top-full mt-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none"
+          >
+            <p class="font-semibold mb-1">
+              {{ isSignalRConnected ? 'Auto-Refresh Active' : 'Connection Lost' }}
+            </p>
+            <p class="text-gray-300">
+              {{
+                isSignalRConnected
+                  ? 'This bracket automatically updates when the tournament manager makes changes. No need to refresh your browser!'
+                  : 'Real-time updates are currently unavailable. Please refresh the page to reconnect.'
+              }}
+            </p>
+            <div class="absolute -top-1 right-4 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+          </div>
+        </div>
+      </div>
+
+      <main class="p-4 pt-0">
         <div v-if="loading && placements.length === 0">Loading...</div>
         <div v-if="error" class="error">{{ error }}</div>
 
@@ -80,10 +132,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, provide, inject } from 'vue';
+import { ref, onMounted, onUnmounted, computed, provide, inject } from 'vue';
 import { useRoute } from 'vue-router';
 import { bracketPlacementService } from '@/services/bracketPlacementService';
 import { bracketService } from '@/services/bracketService';
+import { signalrService } from '@/services/signalrService';
 
 import Sidebar from '@/partials/Sidebar.vue';
 import Header from '@/partials/Header.vue';
@@ -117,6 +170,7 @@ const headerRef = ref<InstanceType<typeof Header>>();
 const showStatusConfirm = ref(false);
 const showNoChampionError = ref(false);
 const nextStatus = ref<string>('');
+const isSignalRConnected = ref(false);
 
 interface MatchWithData extends BracketPosition {
   player1Data: BracketPlacement | null;
@@ -348,8 +402,41 @@ const confirmStatusChange = async () => {
   }
 };
 
-onMounted(() => {
-  loadData();
+onMounted(async () => {
+  await loadData();
+
+  // Initialize SignalR connection
+  if (bracket.value?.id) {
+    try {
+      await signalrService.startConnection();
+      await signalrService.joinBracket(bracket.value.id);
+      isSignalRConnected.value = true;
+
+      // Register event handlers
+      signalrService.onMatchScoreUpdated(async (data) => {
+        console.log('Match score updated:', data);
+        await refreshData();
+      });
+
+      signalrService.onBracketStatusChanged(async (data) => {
+        console.log('Bracket status changed:', data);
+        await refreshData();
+      });
+    } catch (err) {
+      console.error('Failed to connect to SignalR:', err);
+      isSignalRConnected.value = false;
+    }
+  }
+});
+
+// SignalR connection management
+onUnmounted(async () => {
+  isSignalRConnected.value = false;
+  signalrService.offAll();
+  if (bracket.value?.id) {
+    await signalrService.leaveBracket(bracket.value.id);
+  }
+  await signalrService.stopConnection();
 });
 </script>
 

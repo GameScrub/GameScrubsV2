@@ -7,7 +7,8 @@ public static class ServiceRegistration
 		public WebApplicationBuilder RegisterServices()
 		{
 			builder.Services
-				.AddTransient<TokenService>();
+				.AddTransient<TokenService>()
+				.AddSingleton<IBracketHubService, BracketHubService>();
 
 			return builder;
 		}

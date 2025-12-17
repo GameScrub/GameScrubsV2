@@ -20,6 +20,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false, // ignore SSL certificate errors
       },
+      '/hubs': {
+        target: 'https://localhost:7291',
+        changeOrigin: true,
+        secure: false, // ignore SSL certificate errors
+        ws: true, // enable WebSocket proxying
+      },
     },
   },
   resolve: {

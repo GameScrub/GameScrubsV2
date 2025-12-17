@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using GameScrubsV2.Configurations;
 using GameScrubsV2.Endpoints;
+using GameScrubsV2.Hubs;
 using GameScrubsV2.Models;
 using GameScrubsV2.Repositories;
 using GameScrubsV2.Services;
@@ -98,6 +99,8 @@ builder.Services.AddCors(options =>
 			.AllowCredentials());
 });
 
+builder.Services.AddSignalR();
+
 builder.Services.AddSwaggerGen();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -121,7 +124,7 @@ app.UseExceptionHandler(exceptionHandlerApp => exceptionHandlerApp.Run(async con
 		var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
 		var exception = exceptionHandlerPathFeature?.Error;
 
-		if (exception is BadHttpRequestException badHttpEx && badHttpEx.InnerException is JsonException jsonEx)
+		if (exception is BadHttpRequestException badHttpEx && badHttpEx.InnerException is JsonException)
 		{
 			context.Response.StatusCode = StatusCodes.Status400BadRequest;
 			context.Response.ContentType = "application/json";
@@ -160,6 +163,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHub<BracketHub>("/hubs/bracket");
 app.MapEndpoints();
 
 app.Run();

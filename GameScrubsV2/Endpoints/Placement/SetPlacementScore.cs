@@ -2,6 +2,7 @@ using GameScrubsV2.Common;
 using GameScrubsV2.Enums;
 using GameScrubsV2.Models;
 using GameScrubsV2.Repositories;
+using GameScrubsV2.Services;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ public static partial class PlacementEndpoints
 				[FromRoute] int placementId,
 				[FromRoute] string? lockCode,
 				[FromServices] GameScrubsV2DbContext dbContext,
+				[FromServices] IBracketHubService bracketHubService,
 				BracketRepository bracketRepository,
 				ILoggerFactory loggerFactory,
 				CancellationToken cancellationToken) =>
@@ -135,6 +137,8 @@ public static partial class PlacementEndpoints
 						return Results.InternalServerError(new MessageResponse(response.ToString()));
 					}
 				}
+
+				await bracketHubService.NotifyMatchScoreUpdated(bracketId, winner.Id);
 
 				return Results.NoContent();
 

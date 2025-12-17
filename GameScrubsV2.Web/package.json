@@ -16,6 +16,7 @@
 		"format": "prettier --write --experimental-cli src/"
 	},
 	"dependencies": {
+		"@microsoft/signalr": "^10.0.0",
 		"@tabler/icons-vue": "^3.35.0",
 		"@tailwindcss/forms": "^0.5.10",
 		"@tailwindcss/postcss": "^4.0.0",

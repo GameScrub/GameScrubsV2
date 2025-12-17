@@ -36,11 +36,11 @@
     >
       <div class="p-6">
         <!-- Modal header -->
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Who won?</h2>
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Select Winner</h2>
           <button
             @click="closeModal"
-            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -54,26 +54,58 @@
         </div>
 
         <!-- Modal body -->
-        <div class="mb-6 flex gap-3">
+        <div class="mb-6 flex items-center gap-4">
           <button
             @click="setWinner(player1)"
-            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            class="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center group"
           >
-            {{ player1.playerName }}
+            <span class="truncate">{{ player1.playerName }}</span>
+            <svg
+              class="w-6 h-6 ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
           </button>
+
+          <!-- VS Icon/Text -->
+          <div class="flex-shrink-0 text-gray-400 dark:text-gray-500 font-bold text-xl">
+            VS
+          </div>
+
           <button
             @click="setWinner(player2)"
-            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            class="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center group"
           >
-            {{ player2.playerName }}
+            <span class="truncate">{{ player2.playerName }}</span>
+            <svg
+              class="w-6 h-6 ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
           </button>
         </div>
 
         <!-- Modal footer -->
-        <div class="flex justify-end gap-3">
+        <div class="flex justify-center">
           <button
             @click="closeModal"
-            class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+            class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
           >
             Cancel
           </button>
