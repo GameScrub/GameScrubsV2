@@ -2,6 +2,16 @@ import { API_BASE_URL } from '@/api.config';
 import { type Bracket } from '@/models/Bracket';
 import { getErrorMessage } from './apiErrorHandler';
 
+export interface PaginatedBracketResponse {
+  brackets: Bracket[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 export const bracketService = {
   // GET all items with optional pagination and filters
   async search(params?: {
@@ -12,7 +22,7 @@ export const bracketService = {
     type?: string;
     status?: string;
     competition?: string;
-  }): Promise<Bracket[]> {
+  }): Promise<PaginatedBracketResponse> {
     const body: any = {};
 
     if (params) {

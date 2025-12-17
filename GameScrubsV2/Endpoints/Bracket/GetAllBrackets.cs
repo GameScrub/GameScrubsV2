@@ -27,6 +27,18 @@ public static partial class BracketEndpoints
 
 				var query = data.AsQueryable();
 
+				if (!string.IsNullOrWhiteSpace(request?.Name))
+				{
+					var nameLower = request.Name.ToLower();
+					query = query.Where(bracket => bracket.Name != null && bracket.Name.ToLower().Contains(nameLower));
+				}
+
+				if (!string.IsNullOrWhiteSpace(request?.Game))
+				{
+					var gameLower = request.Game.ToLower();
+					query = query.Where(bracket => bracket.Game != null && bracket.Game.ToLower().Contains(gameLower));
+				}
+
 				if (request?.Status is not null)
 				{
 					query = query.Where(bracket => bracket.Status == request.Status);
@@ -49,13 +61,27 @@ public static partial class BracketEndpoints
 
 				var pagination = request?.GetPagination() ?? Pagination.Empty;
 
-				var result = query
-				   .OrderByDescending(bracket => bracket.StartDate)
+				var orderedQuery = query.OrderByDescending(bracket => bracket.StartDate);
+				var totalCount = orderedQuery.Count();
+
+				var paginatedBrackets = orderedQuery
 				   .Paginate(pagination)
 				   .ToList()
-				   .Select(BracketResponse.ToResponseModel);
+				   .Select(BracketResponse.ToResponseModel)
+				   .ToList();
 
-				return Results.Ok(result);
+				var response = new GetAllBracketsResponse(paginatedBrackets)
+				{
+					Brackets = paginatedBrackets,
+					PageNumber = pagination.PageNumber,
+					PageSize = pagination.PageSize,
+					TotalCount = totalCount,
+					TotalPages = pagination.IsEmpty ? 1 : (int)Math.Ceiling((double)totalCount / pagination.PageSize),
+					HasPreviousPage = pagination.PageNumber > 1,
+					HasNextPage = pagination.PageNumber < (pagination.IsEmpty ? 1 : (int)Math.Ceiling((double)totalCount / pagination.PageSize))
+				};
+
+				return Results.Ok(response);
 			}).WithName("GetAllBrackets")
 			.AllowAnonymous();
 
@@ -71,6 +97,7 @@ public static partial class BracketEndpoints
 		public BracketType? Type { get; init; }
 		public CompetitionType? Competition { get; init; }
 		public string? Name { get; init; }
+		public string? Game { get; init; }
 
 		public Pagination GetPagination() => new(PageSize ?? 0, PageNumber ?? 0);
 	}

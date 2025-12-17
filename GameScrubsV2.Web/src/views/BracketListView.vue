@@ -113,7 +113,9 @@
             <header class="px-5 py-4">
               <h2 class="font-semibold text-gray-800 dark:text-gray-100">
                 Found
-                <span class="text-gray-400 dark:text-gray-500 font-medium">{{ items.length }}</span>
+                <span class="text-gray-400 dark:text-gray-500 font-medium">
+                  {{ pagination.totalCount }}
+                </span>
               </h2>
             </header>
 
@@ -222,6 +224,84 @@
                 </tbody>
               </table>
             </div>
+
+            <!-- Pagination -->
+            <div
+              v-if="pagination.totalCount > 0"
+              class="px-5 py-4 border-t border-gray-100 dark:border-gray-700/60"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-4">
+                <!-- Page info -->
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                  Showing
+                  {{
+                    Math.min(
+                      (pagination.currentPage - 1) * pagination.pageSize + 1,
+                      pagination.totalCount,
+                    )
+                  }}
+                  to
+                  {{
+                    Math.min(pagination.currentPage * pagination.pageSize, pagination.totalCount)
+                  }}
+                  of {{ pagination.totalCount }} results
+                </div>
+
+                <!-- Pagination buttons (only show if more than 1 page) -->
+                <div v-if="pagination.totalPages > 1" class="flex items-center gap-2">
+                  <button
+                    @click="goToPage(1)"
+                    :disabled="pagination.currentPage === 1"
+                    class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    First
+                  </button>
+                  <button
+                    @click="goToPage(pagination.currentPage - 1)"
+                    :disabled="!pagination.hasPreviousPage"
+                    class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+
+                  <!-- Page number indicator -->
+                  <div class="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300">
+                    Page {{ pagination.currentPage }} of {{ pagination.totalPages }}
+                  </div>
+
+                  <button
+                    @click="goToPage(pagination.currentPage + 1)"
+                    :disabled="!pagination.hasNextPage"
+                    class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                  <button
+                    @click="goToPage(pagination.totalPages)"
+                    :disabled="pagination.currentPage === pagination.totalPages"
+                    class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Last
+                  </button>
+                </div>
+
+                <!-- Page size selector (always show) -->
+                <div class="flex items-center gap-2">
+                  <label class="text-sm text-gray-500 dark:text-gray-400">Per page:</label>
+                  <select
+                    v-model="pagination.pageSize"
+                    @change="handlePageSizeChange"
+                    class="pl-3 pr-8 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  >
+                    <option :value="5">5</option>
+                    <option :value="10">10</option>
+                    <option :value="25">25</option>
+                    <option :value="50">50</option>
+                    <option :value="100">100</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -240,8 +320,17 @@ import type { Bracket } from '@/models/Bracket';
 const items = ref<Bracket[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
-
 const sidebarOpen = ref(false);
+
+// Pagination state
+const pagination = ref({
+  currentPage: 1,
+  pageSize: 25,
+  totalCount: 0,
+  totalPages: 1,
+  hasPreviousPage: false,
+  hasNextPage: false,
+});
 
 // Filter state
 const filters = ref({
@@ -268,14 +357,23 @@ const loadItems = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const params: any = {};
+    const params: any = {
+      pageNumber: pagination.value.currentPage,
+      pageSize: pagination.value.pageSize,
+    };
 
     if (filters.value.name) params.name = filters.value.name;
     if (filters.value.game) params.game = filters.value.game;
     if (filters.value.status) params.status = filters.value.status;
     if (filters.value.type) params.type = filters.value.type;
 
-    items.value = await bracketService.search(Object.keys(params).length > 0 ? params : undefined);
+    const response = await bracketService.search(params);
+
+    items.value = response.brackets;
+    pagination.value.totalCount = response.totalCount;
+    pagination.value.totalPages = response.totalPages;
+    pagination.value.hasPreviousPage = response.hasPreviousPage;
+    pagination.value.hasNextPage = response.hasNextPage;
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'An error occurred';
   } finally {
@@ -290,6 +388,7 @@ const handleTextFilterChange = () => {
   }
 
   filterDebounceTimer = setTimeout(() => {
+    pagination.value.currentPage = 1; // Reset to first page when filtering
     loadItems();
   }, 500);
 };
@@ -302,6 +401,20 @@ const clearFilters = () => {
     status: '',
     type: '',
   };
+  pagination.value.currentPage = 1; // Reset to first page
+  loadItems();
+};
+
+// Pagination functions
+const goToPage = (page: number) => {
+  if (page >= 1 && page <= pagination.value.totalPages) {
+    pagination.value.currentPage = page;
+    loadItems();
+  }
+};
+
+const handlePageSizeChange = () => {
+  pagination.value.currentPage = 1; // Reset to first page when changing page size
   loadItems();
 };
 
