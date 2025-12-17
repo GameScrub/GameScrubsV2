@@ -1,5 +1,8 @@
 <template>
-  <div class="match bg-white dark:bg-gray-800 shadow-xs rounded-xl pl-2 pr-2" :class="{ 'completed': bracketStatus === 'Completed' }">
+  <div
+    class="match bg-white dark:bg-gray-800 shadow-xs rounded-xl pl-2 pr-2"
+    :class="{ completed: bracketStatus === 'Completed' }"
+  >
     <!-- Body -->
     <div class="m-0" @click.stop="openModal">
       <!-- Content -->
@@ -99,6 +102,7 @@ interface Props {
 const notification = inject<ReturnType<typeof useNotification>>('notification');
 const refreshBracket = inject<() => Promise<void>>('refreshBracket');
 const showLockCodeError = inject<() => void>('showLockCodeError');
+const checkAndPromptCompleteStatus = inject<() => void>('checkAndPromptCompleteStatus');
 const bracketStore = useBracketStore();
 
 const props = withDefaults(defineProps<Props>(), {
@@ -170,6 +174,11 @@ const setWinner = async (player: BracketPlacement) => {
 
     if (refreshBracket) {
       await refreshBracket();
+
+      // Check if this resulted in a champion being determined
+      if (checkAndPromptCompleteStatus) {
+        checkAndPromptCompleteStatus();
+      }
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to update bracket';
@@ -205,7 +214,7 @@ function getPlayerClass(player: BracketPlacement) {
 }
 
 .match:hover {
-  box-shadow: 0 2px 8px hwb(123 11% 33%);
+  box-shadow: 0 2px 8px #51a2ff;
 }
 
 .match.completed {
@@ -213,7 +222,9 @@ function getPlayerClass(player: BracketPlacement) {
 }
 
 .match.completed:hover {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .player {
@@ -234,11 +245,12 @@ function getPlayerClass(player: BracketPlacement) {
 }
 
 .player.winner {
-  @apply text-sm text-green-500;
+  @apply text-sm text-blue-300;
 }
 
 .player.loser {
-  @apply text-sm text-red-500;
+  @apply text-sm text-shadow-amber-50;
+  text-decoration: line-through;
 }
 
 .score {
@@ -250,7 +262,7 @@ function getPlayerClass(player: BracketPlacement) {
 }
 
 .winner .score {
-  color: #22c55e;
+  color: #51a2ff;
 }
 
 .loser .score {

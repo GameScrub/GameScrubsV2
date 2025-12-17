@@ -28,7 +28,11 @@
           >
             <div class="flex items-center justify-between gap-4">
               <div>
-                <p class="font-medium">Players cannot be added or reordered because the bracket status is "{{ bracket.status }}".</p>
+                <p class="font-medium">
+                  Players cannot be added or reordered because the bracket status is "{{
+                    bracket.status
+                  }}".
+                </p>
                 <p class="text-sm mt-1">Only brackets in "Setup" status can be modified.</p>
               </div>
               <button
@@ -43,12 +47,34 @@
 
           <!-- Page Title -->
           <div class="mb-6">
-            <h1 class="text-2xl md:text-3xl text-gray-800 dark:text-gray-100 font-bold">
-              Manage Players
-            </h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">
-              Add players and arrange their seeding order by dragging them
-            </p>
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-2xl md:text-3xl text-gray-800 dark:text-gray-100 font-bold">
+                  Manage Players
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">
+                  Add players and arrange their seeding order by dragging them
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  @click.stop="handleViewBracket"
+                  class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  <IconTournament :size="20" :stroke-width="2" />
+                  View Bracket
+                </button>
+                <button
+                  type="button"
+                  @click.stop="handleEditBracket"
+                  class="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  <IconSettings :size="20" :stroke-width="2" />
+                  Edit Bracket
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Add Player Form -->
@@ -76,7 +102,8 @@
               </button>
             </form>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              Maximum {{ maxPlayers }} players for this bracket type. Current: {{ players.length }} /
+              Maximum {{ maxPlayers }} players for this bracket type. Current:
+              {{ players.length }} /
               {{ maxPlayers }}
             </p>
           </div>
@@ -100,7 +127,10 @@
               </button>
             </div>
 
-            <div v-if="displayPlayers.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+            <div
+              v-if="displayPlayers.length === 0"
+              class="text-center py-8 text-gray-500 dark:text-gray-400"
+            >
               No players added yet. Add your first player above.
             </div>
 
@@ -121,17 +151,18 @@
                       ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 hover:border-blue-400 dark:hover:border-blue-500'
                       : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500',
                     element.id === 0 ? 'opacity-60' : '',
-                    index % 2 === 1 ? 'mb-4' : ''
+                    index % 2 === 1 ? 'mb-4' : '',
                   ]"
                 >
                   <!-- Drag Handle -->
-                  <div :class="['drag-handle', isFormDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-move', 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']">
-                    <svg
-                      class="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                  <div
+                    :class="[
+                      'drag-handle',
+                      isFormDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-move',
+                      'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300',
+                    ]"
+                  >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -149,7 +180,7 @@
                         ? 'bg-gray-500'
                         : index % 2 === 0
                           ? 'bg-blue-600'
-                          : 'bg-gray-600'
+                          : 'bg-gray-600',
                     ]"
                   >
                     {{ index + 1 }}
@@ -163,17 +194,12 @@
                   <!-- Delete Button (only for real players, not byes) -->
                   <button
                     v-if="element.id !== 0"
-                    @click="handleRemovePlayer(element.id)"
+                    @click.stop="handleRemovePlayer(element.id)"
                     :disabled="isSubmitting || isFormDisabled"
                     class="shrink-0 p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Remove player"
                   >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -240,13 +266,28 @@
       @cancel="showRemovePlayerConfirm = false"
     />
   </Teleport>
+
+  <!-- Confirm Modal for Unsaved Changes -->
+  <Teleport to="body">
+    <ConfirmModal
+      id="unsaved-changes-modal"
+      :modal-open="showUnsavedChangesConfirm"
+      title="Unsaved Changes"
+      message="You have unsaved changes. Are you sure you want to leave without saving?"
+      confirm-text="Leave Without Saving"
+      cancel-text="Stay"
+      :danger="true"
+      @confirm="confirmLeaveWithoutSaving"
+      @cancel="cancelLeave"
+    />
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, inject, nextTick, type Ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, computed, onMounted, inject, nextTick, watch, type Ref } from 'vue';
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import draggable from 'vuedraggable';
-import { IconReload } from '@tabler/icons-vue';
+import { IconReload, IconTournament, IconSettings } from '@tabler/icons-vue';
 import Sidebar from '@/partials/Sidebar.vue';
 import Header from '@/partials/Header.vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
@@ -267,7 +308,7 @@ const bracketStore = useBracketStore();
 
 const bracket = ref<Bracket>();
 const players = ref<Player[]>([]);
-const displayPlayers = ref<Player[]>([]); // Local array for drag-and-drop
+const displayPlayers = ref<Player[]>([]);
 const originalPlayerOrder = ref<number[]>([]);
 const newPlayerName = ref('');
 
@@ -276,6 +317,11 @@ const isReverting = ref(false);
 const showRevertConfirm = ref(false);
 const showRemovePlayerConfirm = ref(false);
 const playerToRemove = ref<number | null>(null);
+const isDirty = ref(false);
+const showUnsavedChangesConfirm = ref(false);
+const pendingNavigation = ref<(() => void) | null>(null);
+const isLoadingData = ref(false);
+const isInitialLoad = ref(true);
 
 const maxPlayers = computed(() => {
   if (!bracket.value) return 0;
@@ -289,15 +335,40 @@ const playersWithByes = computed(() => {
   const byesNeeded = maxPlayers.value - players.value.length;
 
   // Add placeholder bye players
+
+  const missingSeedIds: number[] = [];
+
+  for (let i = 0; i < maxPlayers.value; i++) {
+    if (!players.value.some((x) => x.seed == i)) {
+      missingSeedIds.push(i);
+      // result.push({
+      //   id: 0,
+      //   bracketId: bracket.value?.id || 0,
+      //   playerName: '--',
+      //   seed: i,
+      //   score: 0,
+      // });
+      //result.sort((a, b) => a.seed - b.seed);
+    }
+  }
+
+  console.log(missingSeedIds);
+
   for (let i = 0; i < byesNeeded; i++) {
+    const byeSeed = missingSeedIds.shift() ?? players.value.length + i;
+
     result.push({
-      id: 0, // 0 represents a bye
+      id: 0,
       bracketId: bracket.value?.id || 0,
       playerName: '--',
-      seed: players.value.length + i,
+      seed: byeSeed, //players.value.length + i,
       score: 0,
     });
+
+    missingSeedIds.pop();
   }
+
+  result.sort((a, b) => a.seed - b.seed);
 
   return result;
 });
@@ -311,11 +382,40 @@ const isFormDisabled = computed(() => {
   return bracket.value?.status !== 'Setup';
 });
 
+// Watch for player order changes to set dirty flag
+watch(
+  displayPlayers,
+  () => {
+    // Don't set dirty flag if we're loading data or during initial load
+    if (!isLoadingData.value && !isInitialLoad.value) {
+      const currentOrder = displayPlayers.value.map((p) => p.id);
+      const hasOrderChanged =
+        JSON.stringify(currentOrder) !== JSON.stringify(originalPlayerOrder.value);
+      if (hasOrderChanged) {
+        isDirty.value = true;
+      }
+    }
+  },
+  { deep: true },
+);
+
+// Navigation guard to prevent accidental navigation with unsaved changes
+onBeforeRouteLeave((to, from, next) => {
+  if (isDirty.value && !isSubmitting.value) {
+    showUnsavedChangesConfirm.value = true;
+    pendingNavigation.value = () => next();
+    return false;
+  } else {
+    next();
+  }
+});
+
 onMounted(async () => {
   await loadData();
 });
 
 async function loadData() {
+  isLoadingData.value = true;
   try {
     const bracketId = Number(route.params.id);
 
@@ -328,6 +428,9 @@ async function loadData() {
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Failed to load bracket data';
     notification?.error(errorMessage);
+  } finally {
+    isLoadingData.value = false;
+    isInitialLoad.value = false;
   }
 }
 
@@ -351,6 +454,7 @@ async function handleAddPlayer() {
     notification?.success('Player added successfully!');
     newPlayerName.value = '';
     await loadData();
+    isDirty.value = false;
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Failed to add player';
     if (errorMessage.includes('lock code')) {
@@ -368,16 +472,25 @@ function handleRemovePlayer(playerId: number) {
 }
 
 async function confirmRemovePlayer() {
-  if (!bracket.value || playerToRemove.value === null) return;
+  if (!bracket.value || playerToRemove.value === null) {
+    showRemovePlayerConfirm.value = false;
+    return;
+  }
 
+  const playerId = playerToRemove.value;
   showRemovePlayerConfirm.value = false;
   isSubmitting.value = true;
 
   try {
-    await playerService.remove(bracket.value.id, playerToRemove.value, bracketStore.getLockCode(bracket.value.id));
+    await playerService.remove(
+      bracket.value.id,
+      playerId,
+      bracketStore.getLockCode(bracket.value.id),
+    );
 
     notification?.success('Player removed successfully!');
     await loadData();
+    isDirty.value = false;
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Failed to remove player';
     if (errorMessage.includes('lock code')) {
@@ -403,10 +516,15 @@ async function handleSaveOrder() {
   try {
     // Map displayPlayers to IDs, where 0 represents a bye
     const playerIds = displayPlayers.value.map((p) => p.id);
-    await playerService.reorder(bracket.value.id, playerIds, bracketStore.getLockCode(bracket.value.id));
+    await playerService.reorder(
+      bracket.value.id,
+      playerIds,
+      bracketStore.getLockCode(bracket.value.id),
+    );
 
     notification?.success('Player order saved successfully!');
     originalPlayerOrder.value = playerIds;
+    isDirty.value = false;
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Failed to save player order';
     if (errorMessage.includes('lock code')) {
@@ -430,7 +548,7 @@ async function handleRandomize() {
   await nextTick();
 
   // Get a fresh snapshot from playersWithByes computed and create deep copies
-  const freshSnapshot = playersWithByes.value.map(p => ({ ...p }));
+  const freshSnapshot = playersWithByes.value.map((p) => ({ ...p }));
 
   // Fisher-Yates shuffle algorithm
   for (let i = freshSnapshot.length - 1; i > 0; i--) {
@@ -466,7 +584,7 @@ async function confirmRevertToSetup() {
     const updatedBracket = await bracketService.changeStatus(
       bracket.value.id,
       'Setup',
-      bracketStore.getLockCode(bracket.value.id)
+      bracketStore.getLockCode(bracket.value.id),
     );
 
     // Update local bracket state
@@ -486,5 +604,27 @@ async function confirmRevertToSetup() {
 
 function handleBack() {
   router.push({ name: 'bracket', params: { id: bracket.value?.id } });
+}
+
+function handleViewBracket() {
+  router.push({ name: 'bracket', params: { id: bracket.value?.id } });
+}
+
+function handleEditBracket() {
+  router.push({ name: 'bracket-edit', params: { id: bracket.value?.id } });
+}
+
+function confirmLeaveWithoutSaving() {
+  showUnsavedChangesConfirm.value = false;
+  isDirty.value = false;
+  if (pendingNavigation.value) {
+    pendingNavigation.value();
+    pendingNavigation.value = null;
+  }
+}
+
+function cancelLeave() {
+  showUnsavedChangesConfirm.value = false;
+  pendingNavigation.value = null;
 }
 </script>

@@ -2,7 +2,7 @@
   <div class="flex">
     <Sidebar :sidebarOpen="sidebarOpen" @close-sidebar="sidebarOpen = false" />
 
-    <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+    <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-auto">
       <Header
         ref="headerRef"
         :sidebarOpen="sidebarOpen"
@@ -24,10 +24,22 @@
         <div v-if="loading && placements.length === 0">Loading...</div>
         <div v-if="error" class="error">{{ error }}</div>
 
-        <div v-if="!loading || placements.length > 0" class="inline-block">
+        <!-- Show setup wizard if bracket is in Setup status -->
+        <BracketSetupWizard
+          v-if="!loading && bracket?.status === BracketStatus.Setup && bracket"
+          :bracket-id="bracket.id"
+          @begin-tournament="handleChangeStatus"
+        />
+
+        <!-- Show bracket if status is Started or Completed -->
+        <div v-else-if="!loading || placements.length > 0" class="inline-block">
           <div class="tournament-bracket">
             <div class="bracket-wrapper">
-              <WinnersBracket :rounds="winnersRounds" :champion="champion" :bracket-status="bracket?.status" />
+              <WinnersBracket
+                :rounds="winnersRounds"
+                :champion="champion"
+                :bracket-status="bracket?.status"
+              />
               <LosersBracket :rounds="losersRounds" :bracket-status="bracket?.status" />
             </div>
           </div>
@@ -79,11 +91,13 @@ import WinnersBracket from '@/components/WinnersBracket.vue';
 import LosersBracket from '@/components/LosersBracket.vue';
 import BracketScore from '@/components/BracketScore.vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
+import BracketSetupWizard from '@/components/BracketSetupWizard.vue';
 
 import { type BracketPlacement } from '@/models/BracketPlacement';
 import { type BracketPosition } from '@/models/BracketPosition';
 import { type Bracket } from '@/models/Bracket';
 import { HeaderVariant } from '@/models/HeaderVariant';
+import { BracketStatus } from '@/models/BracketStatus';
 import type { useNotification } from '@/composables/useNotification';
 import { useBracketStore } from '@/stores/bracket';
 
@@ -150,22 +164,22 @@ const losersRounds = computed(() => {
 
 const canChangeStatus = computed(() => {
   const status = bracket.value?.status;
-  return status === 'Setup' || status === 'Started';
+  return status === BracketStatus.Setup || status === BracketStatus.Started;
 });
 
 const statusChangeModalTitle = computed(() => {
-  if (bracket.value?.status === 'Setup') {
+  if (bracket.value?.status === BracketStatus.Setup) {
     return 'Start Bracket';
-  } else if (bracket.value?.status === 'Started') {
+  } else if (bracket.value?.status === BracketStatus.Started) {
     return 'Complete Bracket';
   }
   return 'Change Status';
 });
 
 const statusChangeModalMessage = computed(() => {
-  if (bracket.value?.status === 'Setup') {
+  if (bracket.value?.status === BracketStatus.Setup) {
     return 'Are you sure you want to start this bracket? Once started, the bracket structure cannot be modified.';
-  } else if (bracket.value?.status === 'Started') {
+  } else if (bracket.value?.status === BracketStatus.Started) {
     if (!champion.value) {
       return 'Cannot complete the bracket yet. A champion must be determined first.';
     }
@@ -175,9 +189,9 @@ const statusChangeModalMessage = computed(() => {
 });
 
 const statusChangeConfirmText = computed(() => {
-  if (bracket.value?.status === 'Setup') {
+  if (bracket.value?.status === BracketStatus.Setup) {
     return 'Start Bracket';
-  } else if (bracket.value?.status === 'Started') {
+  } else if (bracket.value?.status === BracketStatus.Started) {
     return 'Complete Bracket';
   }
   return 'Confirm';
@@ -277,8 +291,16 @@ const showLockCodeError = () => {
   headerRef.value?.showLockCodeError();
 };
 
+const checkAndPromptCompleteStatus = () => {
+  // Only prompt if bracket is in Started status and a champion exists
+  if (bracket.value?.status === BracketStatus.Started && champion.value) {
+    handleChangeStatus();
+  }
+};
+
 provide('refreshBracket', refreshData);
 provide('showLockCodeError', showLockCodeError);
+provide('checkAndPromptCompleteStatus', checkAndPromptCompleteStatus);
 
 const handleShowScores = () => {
   bracketScoreRef.value?.showScores();
@@ -288,15 +310,15 @@ const handleChangeStatus = () => {
   if (!bracket.value) return;
 
   // Determine next status
-  if (bracket.value.status === 'Setup') {
-    nextStatus.value = 'Started';
+  if (bracket.value.status === BracketStatus.Setup) {
+    nextStatus.value = BracketStatus.Started;
     showStatusConfirm.value = true;
-  } else if (bracket.value.status === 'Started') {
+  } else if (bracket.value.status === BracketStatus.Started) {
     if (!champion.value) {
       showNoChampionError.value = true;
       return;
     }
-    nextStatus.value = 'Completed';
+    nextStatus.value = BracketStatus.Completed;
     showStatusConfirm.value = true;
   }
 };
@@ -308,7 +330,11 @@ const confirmStatusChange = async () => {
 
   try {
     const bracketId = bracket.value.id;
-    await bracketService.changeStatus(bracketId, nextStatus.value, bracketStore.getLockCode(bracketId));
+    await bracketService.changeStatus(
+      bracketId,
+      nextStatus.value,
+      bracketStore.getLockCode(bracketId),
+    );
 
     await loadData();
 

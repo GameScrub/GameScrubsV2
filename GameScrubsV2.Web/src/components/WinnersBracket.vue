@@ -235,7 +235,7 @@ function getChampionOffset() {
 .winners-bracket {
   border-radius: 8px;
   padding: 2rem;
-  box-shadow: 0 2px 8px hwb(123 11% 33%);
+  box-shadow: 0 2px 8px rgb(90, 120, 250);
 }
 
 .round-headers {
@@ -275,7 +275,11 @@ function getChampionOffset() {
   width: 2rem;
   height: 2px;
   left: 2rem;
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
+}
+
+:global(.dark) .horizontal-connector {
+  background: #818cf8;
 }
 
 .matches {
@@ -323,7 +327,7 @@ function getChampionOffset() {
 }
 
 .player.champion {
-  @apply text-green-500 bg-white dark:bg-gray-800 shadow-xs rounded-xl p-4 pr-10 pl-10;
+  @apply text-blue-400 bg-white dark:bg-gray-800 shadow-xs rounded-xl p-4 pr-10 pl-10;
   font-weight: 700;
 }
 
@@ -338,7 +342,7 @@ function getChampionOffset() {
   top: 50%;
   width: 2rem;
   height: 2px;
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
   transform: translateY(-50%);
 }
 
@@ -350,7 +354,7 @@ function getChampionOffset() {
   top: 50%;
   width: 2px;
   height: calc(100% + 2rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 .round[data-round='1'] .matches :deep(.match:nth-child(even)::before) {
@@ -360,7 +364,7 @@ function getChampionOffset() {
   bottom: 50%;
   width: 2px;
   height: calc(100% + 2rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 /* Vertical connectors for Round 2 */
@@ -371,7 +375,7 @@ function getChampionOffset() {
   top: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(1)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 .round[data-round='2'] .matches :deep(.match:nth-child(even)::before) {
@@ -381,7 +385,7 @@ function getChampionOffset() {
   bottom: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(1)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 /* Vertical connectors for Round 3 */
@@ -392,7 +396,7 @@ function getChampionOffset() {
   top: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(2)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 .round[data-round='3'] .matches :deep(.match:nth-child(even)::before) {
@@ -402,7 +406,7 @@ function getChampionOffset() {
   bottom: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(2)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 /* Vertical connectors for Round 4 */
@@ -413,7 +417,7 @@ function getChampionOffset() {
   top: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(3)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 .round[data-round='4'] .matches :deep(.match:nth-child(even)::before) {
@@ -423,7 +427,7 @@ function getChampionOffset() {
   bottom: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(3)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 /* Vertical connectors for Round 5 */
@@ -434,7 +438,7 @@ function getChampionOffset() {
   top: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(4)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 .round[data-round='5'] .matches :deep(.match:nth-child(even)::before) {
@@ -444,7 +448,7 @@ function getChampionOffset() {
   bottom: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(4)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 /* Prevent vertical connectors on the last round before champion */
 .round.is-last-round .matches :deep(.match::before) {
@@ -459,7 +463,7 @@ function getChampionOffset() {
   top: 50%;
   width: 8rem;
   height: 2px;
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
   transform: translateY(-50%);
   display: block !important; /* Override the earlier display: none */
 }
@@ -502,7 +506,7 @@ function getChampionOffset() {
   top: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(5)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 .round[data-round='6'] .matches :deep(.match:nth-child(even)::before) {
@@ -512,7 +516,7 @@ function getChampionOffset() {
   bottom: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(5)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 /* Round 7 spacing (for future 64-player brackets) */
@@ -528,7 +532,7 @@ function getChampionOffset() {
   top: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(6)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 
 .round[data-round='7'] .matches :deep(.match:nth-child(even)::before) {
@@ -538,6 +542,6 @@ function getChampionOffset() {
   bottom: 50%;
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(6)') * 1rem);
-  background: hwb(123 11% 33%);
+  background: #51a2ff;
 }
 </style>

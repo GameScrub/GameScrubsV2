@@ -22,9 +22,33 @@
 
         <!-- Modal body -->
         <div class="mb-6 flex flex-col gap-3">
-          <div v-for="score in scores" :key="score.position" class="flex gap-3">
-            <span class="font-semibold">{{ score.position }}.</span>
-            <span>{{ score.name }}</span>
+          <div
+            v-for="score in scores"
+            :key="score.position"
+            class="flex items-center gap-3 p-3"
+          >
+            <div class="flex items-center gap-2 min-w-[40px]">
+              <IconCrown
+                v-if="score.position === 1"
+                :size="24"
+                :stroke-width="1.5"
+                class="text-yellow-500"
+              />
+              <IconMedal2
+                v-else-if="score.position === 2"
+                :size="24"
+                :stroke-width="1.5"
+                class="text-gray-400"
+              />
+              <IconMedal
+                v-else-if="score.position === 3"
+                :size="24"
+                :stroke-width="1.5"
+                class="text-amber-600"
+              />
+              <span v-else class="font-semibold">{{ score.position }}.</span>
+            </div>
+            <span :class="getNameClass(score.position)">{{ score.name }}</span>
           </div>
         </div>
       </div>
@@ -38,6 +62,7 @@ import { bracketPlacementService } from '@/services/bracketPlacementService';
 import type { useNotification } from '@/composables/useNotification';
 import type { Score } from '@/models/Score';
 import ModalEmpty from '@/components/ModalEmpty.vue';
+import { IconCrown, IconMedal, IconMedal2 } from '@tabler/icons-vue';
 
 const notification = inject<ReturnType<typeof useNotification>>('notification');
 const scores = ref<Score[]>([]);
@@ -81,6 +106,17 @@ const showScores = async () => {
     notification?.error(errorMessage);
   }
 };
+
+function getNameClass(position: number) {
+  if (position === 1) {
+    return 'font-bold text-lg text-yellow-600 dark:text-yellow-400';
+  } else if (position === 2) {
+    return 'font-semibold text-lg text-slate-600 dark:text-slate-300';
+  } else if (position === 3) {
+    return 'font-semibold text-lg text-amber-700 dark:text-amber-400';
+  }
+  return 'text-gray-700 dark:text-gray-300';
+}
 
 defineExpose({
   showScores,

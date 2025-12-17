@@ -44,20 +44,30 @@
 
           <!-- Form Card -->
           <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-            <!-- Header with Manage Players button (only in edit mode) -->
+            <!-- Header with action buttons (only in edit mode) -->
             <div
               v-if="isEditMode"
               class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700"
             >
               <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Edit Bracket</h2>
-              <button
-                type="button"
-                @click="handleManagePlayers"
-                class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                <IconUsers :size="20" :stroke-width="2" />
-                Manage Players
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  @click.stop="handleViewBracket"
+                  class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  <IconTournament :size="20" :stroke-width="2" />
+                  View Bracket
+                </button>
+                <button
+                  type="button"
+                  @click.stop="handleManagePlayers"
+                  class="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  <IconUsers :size="20" :stroke-width="2" />
+                  Manage Players
+                </button>
+              </div>
             </div>
 
             <form @submit.prevent="handleSubmit">
@@ -270,12 +280,27 @@
       @cancel="showRevertConfirm = false"
     />
   </Teleport>
+
+  <!-- Confirm Modal for Unsaved Changes -->
+  <Teleport to="body">
+    <ConfirmModal
+      id="unsaved-changes-modal"
+      :modal-open="showUnsavedChangesConfirm"
+      title="Unsaved Changes"
+      message="You have unsaved changes. Are you sure you want to leave without saving?"
+      confirm-text="Leave Without Saving"
+      cancel-text="Stay"
+      :danger="true"
+      @confirm="confirmLeaveWithoutSaving"
+      @cancel="cancelLeave"
+    />
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, inject, type Ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { IconUsers } from '@tabler/icons-vue';
+import { ref, computed, onMounted, inject, watch, nextTick, type Ref } from 'vue';
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
+import { IconUsers, IconTournament } from '@tabler/icons-vue';
 import Sidebar from '@/partials/Sidebar.vue';
 import Header from '@/partials/Header.vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
@@ -300,6 +325,11 @@ const isEditMode = computed(() => !!route.params.id);
 const isSubmitting = ref(false);
 const isReverting = ref(false);
 const showRevertConfirm = ref(false);
+const isDirty = ref(false);
+const showUnsavedChangesConfirm = ref(false);
+const pendingNavigation = ref<(() => void) | null>(null);
+const isLoadingData = ref(false);
+const isInitialLoad = ref(true);
 
 const isFormDisabled = computed(() => {
   return isEditMode.value && bracket.value?.status !== 'Setup';
@@ -348,13 +378,47 @@ const competitionTypes = [
   { value: Competition.Other, label: 'Other' },
 ];
 
+// Watch for form changes to set dirty flag
+watch(
+  formData,
+  (newvalues, previousvalue) => {
+    console.log(previousvalue);
+    console.log(newvalues);
+
+    console.log('EditMode: %s', isEditMode.value);
+    console.log('Loading: %s', isLoadingData.value);
+    console.log('Dirty: %s', isDirty.value);
+
+    // Don't set dirty flag if we're loading data or during initial load
+    if (!isInitialLoad.value) {
+      isDirty.value = true;
+    }
+  },
+  { deep: true },
+);
+
+// Navigation guard to prevent accidental navigation with unsaved changes
+onBeforeRouteLeave((to, from, next) => {
+  if (isDirty.value) {
+    showUnsavedChangesConfirm.value = true;
+    pendingNavigation.value = () => next();
+    next(false);
+  } else {
+    next();
+  }
+});
+
 onMounted(async () => {
   if (isEditMode.value) {
     await loadBracket();
+  } else {
+    // For create mode, mark initial load as complete immediately
+    isInitialLoad.value = false;
   }
 });
 
 async function loadBracket() {
+  isLoadingData.value = true;
   try {
     const bracketId = parseInt(route.params.id as string);
     const bracketData = await bracketService.getById(bracketId);
@@ -377,6 +441,11 @@ async function loadBracket() {
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Failed to load bracket';
     notification?.error(errorMessage);
+  } finally {
+    isLoadingData.value = false;
+    // Wait for Vue to process all reactive updates before enabling dirty tracking
+    await nextTick();
+    isInitialLoad.value = false;
   }
 }
 
@@ -415,6 +484,7 @@ async function createBracket() {
 
   const result = await bracketService.create(payload);
   notification?.success('Bracket created successfully! Add players to get started.');
+  isDirty.value = false;
 
   setTimeout(() => {
     router.push({ name: 'bracket-manage-users', params: { id: result.id } });
@@ -443,6 +513,7 @@ async function updateBracket() {
     await bracketService.update(payload, bracketStore.getLockCode(bracketId));
     notification?.success('Bracket updated successfully!');
     await loadBracket();
+    isDirty.value = false;
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Failed to update bracket';
     if (errorMessage.includes('lock code')) {
@@ -494,5 +565,23 @@ function handleCancel() {
 
 function handleManagePlayers() {
   router.push({ name: 'bracket-manage-users', params: { id: route.params.id } });
+}
+
+function handleViewBracket() {
+  router.push({ name: 'bracket', params: { id: route.params.id } });
+}
+
+function confirmLeaveWithoutSaving() {
+  showUnsavedChangesConfirm.value = false;
+  isDirty.value = false;
+  if (pendingNavigation.value) {
+    pendingNavigation.value();
+    pendingNavigation.value = null;
+  }
+}
+
+function cancelLeave() {
+  showUnsavedChangesConfirm.value = false;
+  pendingNavigation.value = null;
 }
 </script>
