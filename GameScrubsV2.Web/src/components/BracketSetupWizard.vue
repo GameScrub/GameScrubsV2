@@ -73,7 +73,7 @@ const handleEditBracket = () => {
 };
 
 const handleManagePlayers = () => {
-  router.push({ name: 'bracket-manage-users', params: { id: props.bracketId } });
+  router.push({ name: 'bracket-manage-players', params: { id: props.bracketId } });
 };
 
 const handleBeginTournament = () => {

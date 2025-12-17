@@ -71,7 +71,7 @@
             <div class="champion-container">
               <div class="">
                 <div class="player champion">
-                  <div class="text-sm">{{ champion?.playerName || 'TBD' }}</div>
+                  <div class="text-sm">{{ champion?.playerName || PlayerPlaceholder.TBD }}</div>
                 </div>
               </div>
             </div>
@@ -85,6 +85,7 @@
 <script setup lang="ts">
 import BracketMatch from '@/components/BracketMatch.vue';
 import type { BracketPlacement } from '@/models/BracketPlacement';
+import { PlayerPlaceholder } from '@/models/PlayerPlaceholder';
 
 interface MatchWithData {
   id: number;

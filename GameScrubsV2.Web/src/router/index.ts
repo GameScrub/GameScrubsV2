@@ -26,9 +26,9 @@ const router = createRouter({
       component: () => import('../views/ManageBracketView.vue'),
     },
     {
-      name: 'bracket-manage-users',
-      path: '/bracket/:id/manage-users',
-      component: () => import('../views/ManageUserBracketView.vue'),
+      name: 'bracket-manage-players',
+      path: '/bracket/:id/manage-players',
+      component: () => import('../views/ManagePlayerBracketView.vue'),
     },
     {
       name: 'bracket',

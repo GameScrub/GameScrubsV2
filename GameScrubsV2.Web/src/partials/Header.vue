@@ -161,6 +161,7 @@ import { IconScoreboard, IconSettings, IconUsers, IconLock, IconEye, IconEyeOff 
 import Tooltip from '@/components/Tooltip.vue';
 import { useBracketStore } from '@/stores/bracket';
 import { HeaderVariant } from '@/models/HeaderVariant';
+import { BracketStatus } from '@/models/BracketStatus';
 
 interface Props {
   sidebarOpen: boolean;
@@ -226,7 +227,7 @@ const editBracket = () => {
 
 const managePlayers = () => {
   if (props.bracketId) {
-    router.push({ name: 'bracket-manage-users', params: { id: props.bracketId } });
+    router.push({ name: 'bracket-manage-players', params: { id: props.bracketId } });
   }
 };
 
@@ -256,13 +257,13 @@ const getStatusBadgeClass = (status: string) => {
   const baseClasses = 'text-xs px-2.5 py-1 rounded-full shadow-none';
 
   switch (status) {
-    case 'Setup':
+    case BracketStatus.Setup:
       return `${baseClasses} bg-blue-500/20 text-blue-600 dark:text-blue-400`;
-    case 'Started':
+    case BracketStatus.Started:
       return `${baseClasses} bg-green-500/20 text-green-600 dark:text-green-400`;
-    case 'OnHold':
+    case BracketStatus.OnHold:
       return `${baseClasses} bg-yellow-500/20 text-yellow-600 dark:text-yellow-400`;
-    case 'Completed':
+    case BracketStatus.Completed:
       return `${baseClasses} bg-gray-500/20 text-gray-600 dark:text-gray-400`;
     default:
       return `${baseClasses} bg-gray-500/20 text-gray-600 dark:text-gray-400`;

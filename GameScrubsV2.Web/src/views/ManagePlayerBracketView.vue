@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-screen overflow-hidden">
     <!-- Sidebar -->
-    <Sidebar :sidebarOpen="sidebarOpen" @close-sidebar="sidebarOpen = false" variant="v2" />
+    <Sidebar :sidebarOpen="sidebarOpen" @close-sidebar="sidebarOpen = false" :variant="SidebarVariant.V2" />
 
     <!-- Content area -->
     <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
@@ -23,7 +23,7 @@
         <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-4xl mx-auto">
           <!-- Warning Alert for non-Setup status -->
           <div
-            v-if="bracket?.status && bracket.status !== 'Setup'"
+            v-if="bracket?.status && bracket.status !== BracketStatus.Setup"
             class="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-700 text-yellow-700 dark:text-yellow-400 rounded-lg"
           >
             <div class="flex items-center justify-between gap-4">
@@ -296,6 +296,9 @@ import { playerService } from '@/services/playerService';
 import { type Bracket } from '@/models/Bracket';
 import { type Player } from '@/models/Player';
 import { HeaderVariant } from '@/models/HeaderVariant';
+import { BracketStatus } from '@/models/BracketStatus';
+import { PlayerPlaceholder } from '@/models/PlayerPlaceholder';
+import { SidebarVariant } from '@/models/SidebarVariant';
 import type { useNotification } from '@/composables/useNotification';
 import { useBracketStore } from '@/stores/bracket';
 
@@ -335,20 +338,11 @@ const playersWithByes = computed(() => {
   const byesNeeded = maxPlayers.value - players.value.length;
 
   // Add placeholder bye players
-
   const missingSeedIds: number[] = [];
 
   for (let i = 0; i < maxPlayers.value; i++) {
     if (!players.value.some((x) => x.seed == i)) {
       missingSeedIds.push(i);
-      // result.push({
-      //   id: 0,
-      //   bracketId: bracket.value?.id || 0,
-      //   playerName: '--',
-      //   seed: i,
-      //   score: 0,
-      // });
-      //result.sort((a, b) => a.seed - b.seed);
     }
   }
 
@@ -360,8 +354,8 @@ const playersWithByes = computed(() => {
     result.push({
       id: 0,
       bracketId: bracket.value?.id || 0,
-      playerName: '--',
-      seed: byeSeed, //players.value.length + i,
+      playerName: PlayerPlaceholder.BYE,
+      seed: byeSeed,
       score: 0,
     });
 
@@ -379,7 +373,7 @@ const hasChanges = computed(() => {
 });
 
 const isFormDisabled = computed(() => {
-  return bracket.value?.status !== 'Setup';
+  return bracket.value?.status !== BracketStatus.Setup;
 });
 
 // Watch for player order changes to set dirty flag
@@ -583,7 +577,7 @@ async function confirmRevertToSetup() {
   try {
     const updatedBracket = await bracketService.changeStatus(
       bracket.value.id,
-      'Setup',
+      BracketStatus.Setup,
       bracketStore.getLockCode(bracket.value.id),
     );
 

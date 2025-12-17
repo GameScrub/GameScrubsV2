@@ -210,7 +210,7 @@
                           <IconSettings :size="20" :stroke-width="1.5" />
                         </router-link>
                         <router-link
-                          :to="{ name: 'bracket-manage-users', params: { id: item.id } }"
+                          :to="{ name: 'bracket-manage-players', params: { id: item.id } }"
                           class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
                           title="Manage Players"
                         >

@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-screen overflow-hidden">
     <!-- Sidebar -->
-    <Sidebar :sidebarOpen="sidebarOpen" @close-sidebar="sidebarOpen = false" variant="v2" />
+    <Sidebar :sidebarOpen="sidebarOpen" @close-sidebar="sidebarOpen = false" :variant="SidebarVariant.V2" />
 
     <!-- Content area -->
     <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
@@ -22,7 +22,7 @@
         <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-4xl mx-auto">
           <!-- Warning Alert for non-Setup status -->
           <div
-            v-if="isEditMode && bracket?.status && bracket.status !== 'Setup'"
+            v-if="isEditMode && bracket?.status && bracket.status !== BracketStatus.Setup"
             class="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-700 text-yellow-700 dark:text-yellow-400 rounded-lg"
           >
             <div class="flex items-center justify-between gap-4">
@@ -309,6 +309,8 @@ import { BracketType } from '@/models/BracketType';
 import { Competition } from '@/models/Competition';
 import type { useNotification } from '@/composables/useNotification';
 import { HeaderVariant } from '@/models/HeaderVariant';
+import { BracketStatus } from '@/models/BracketStatus';
+import { SidebarVariant } from '@/models/SidebarVariant';
 import { useBracketStore } from '@/stores/bracket';
 
 const notification = inject<ReturnType<typeof useNotification>>('notification');
@@ -332,7 +334,7 @@ const isLoadingData = ref(false);
 const isInitialLoad = ref(true);
 
 const isFormDisabled = computed(() => {
-  return isEditMode.value && bracket.value?.status !== 'Setup';
+  return isEditMode.value && bracket.value?.status !== BracketStatus.Setup;
 });
 
 interface BracketFormData {
@@ -487,7 +489,7 @@ async function createBracket() {
   isDirty.value = false;
 
   setTimeout(() => {
-    router.push({ name: 'bracket-manage-users', params: { id: result.id } });
+    router.push({ name: 'bracket-manage-players', params: { id: result.id } });
   }, 1500);
 }
 
@@ -537,7 +539,7 @@ async function confirmRevertToSetup() {
     const bracketId = parseInt(route.params.id as string);
     const updatedBracket = await bracketService.changeStatus(
       bracketId,
-      'Setup',
+      BracketStatus.Setup,
       bracketStore.getLockCode(bracketId),
     );
 
@@ -564,7 +566,7 @@ function handleCancel() {
 }
 
 function handleManagePlayers() {
-  router.push({ name: 'bracket-manage-users', params: { id: route.params.id } });
+  router.push({ name: 'bracket-manage-players', params: { id: route.params.id } });
 }
 
 function handleViewBracket() {

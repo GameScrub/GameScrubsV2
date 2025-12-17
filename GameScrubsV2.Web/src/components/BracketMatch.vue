@@ -1,7 +1,7 @@
 <template>
   <div
     class="match bg-white dark:bg-gray-800 shadow-xs rounded-xl pl-2 pr-2"
-    :class="{ completed: bracketStatus === 'Completed' }"
+    :class="{ completed: bracketStatus === BracketStatus.Completed }"
   >
     <!-- Body -->
     <div class="m-0" @click.stop="openModal">
@@ -12,7 +12,7 @@
           <span v-if="showScores" class="score">{{ player1.score }}</span>
         </div>
         <div v-else class="player empty">
-          <span class="player-name">TBD</span>
+          <span class="player-name">{{ PlayerPlaceholder.TBD }}</span>
         </div>
 
         <div v-if="player2" class="player" :class="getPlayerClass(player2)">
@@ -20,7 +20,7 @@
           <span v-if="showScores" class="score">{{ player2.score }}</span>
         </div>
         <div v-else class="player empty">
-          <span class="player-name">TBD</span>
+          <span class="player-name">{{ PlayerPlaceholder.TBD }}</span>
         </div>
       </div>
     </div>
@@ -89,6 +89,8 @@ import { bracketPlacementService } from '@/services/bracketPlacementService';
 import { useBracketStore } from '@/stores/bracket';
 import { type BracketPlacement } from '@/models/BracketPlacement';
 import { PlacementStatus } from '@/models/PlacementStatus';
+import { BracketStatus } from '@/models/BracketStatus';
+import { PlayerPlaceholder } from '@/models/PlayerPlaceholder';
 import ModalEmpty from '@/components/ModalEmpty.vue';
 import type { useNotification } from '@/composables/useNotification';
 
@@ -119,13 +121,13 @@ const isModalOpen = ref(false);
 
 const openModal = () => {
   // Don't open modal if bracket is in Setup status
-  if (props.bracketStatus === 'Setup') {
+  if (props.bracketStatus === BracketStatus.Setup) {
     notification?.error('Bracket status must be set to "Started" before selecting winners.');
     return;
   }
 
   // Don't open modal if bracket is completed
-  if (props.bracketStatus === 'Completed') {
+  if (props.bracketStatus === BracketStatus.Completed) {
     return;
   }
 
@@ -136,8 +138,8 @@ const openModal = () => {
   }
 
   // Auto-select winner if one or both players are byes
-  const player1IsBye = props.player1.playerName === '--';
-  const player2IsBye = props.player2.playerName === '--';
+  const player1IsBye = props.player1.playerName === PlayerPlaceholder.BYE;
+  const player2IsBye = props.player2.playerName === PlayerPlaceholder.BYE;
 
   if (player1IsBye || player2IsBye) {
     // If both are byes, select player1
@@ -200,7 +202,7 @@ function getPlayerClass(player: BracketPlacement) {
   return {
     winner: isWinner,
     loser: isLoser,
-    empty: player.playerName === '--',
+    empty: player.playerName === PlayerPlaceholder.BYE,
   };
 }
 </script>
