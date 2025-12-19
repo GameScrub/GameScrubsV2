@@ -91,8 +91,13 @@
                 :rounds="winnersRounds"
                 :champion="champion"
                 :bracket-status="bracket?.status"
+                :is-double-elimination="isDoubleElimination"
               />
-              <LosersBracket :rounds="losersRounds" :bracket-status="bracket?.status" />
+              <LosersBracket
+                :rounds="losersRounds"
+                :bracket-status="bracket?.status"
+                :is-double-elimination="isDoubleElimination"
+              />
             </div>
           </div>
         </div>
@@ -214,6 +219,10 @@ const winnersRounds = computed(() => {
 
 const losersRounds = computed(() => {
   return buildRounds(losersMatches.value);
+});
+
+const isDoubleElimination = computed(() => {
+  return losersMatches.value.length > 0;
 });
 
 const canChangeStatus = computed(() => {

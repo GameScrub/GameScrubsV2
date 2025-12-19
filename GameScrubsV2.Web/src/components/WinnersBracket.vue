@@ -35,18 +35,31 @@
           <div
             class="round"
             :data-round="roundIndex + 1"
-            :class="{ 'is-last-round': roundIndex === rounds.length - 1 }"
+            :class="{
+              'is-last-round': roundIndex === rounds.length - 1,
+              'is-double-elim': isDoubleElimination,
+            }"
             :style="getBracketMatchOffset(roundIndex)"
           >
             <div class="matches">
-              <BracketMatch
-                v-for="match in round"
-                :key="match.id"
-                :player1="match.player1Data"
-                :player2="match.player2Data"
-                :show-scores="false"
-                :bracket-status="bracketStatus"
-              />
+              <template v-for="(match, matchIndex) in round" :key="match.id">
+                <div class="match-wrapper">
+                  <BracketMatch
+                    :player1="match.player1Data"
+                    :player2="match.player2Data"
+                    :show-scores="false"
+                    :bracket-status="bracketStatus"
+                  />
+                  <!-- Position marker for first match in Round 4 (only for double elimination) -->
+                  <PositionMarker
+                    v-if="isDoubleElimination && roundIndex === 3 && matchIndex === 0"
+                    :number="1"
+                    position="left"
+                    :vertical-position="75"
+                    :connector-length="6"
+                  />
+                </div>
+              </template>
             </div>
           </div>
 
@@ -84,6 +97,7 @@
 
 <script setup lang="ts">
 import BracketMatch from '@/components/BracketMatch.vue';
+import PositionMarker from '@/components/PositionMarker.vue';
 import type { BracketPlacement } from '@/models/BracketPlacement';
 import { PlayerPlaceholder } from '@/models/PlayerPlaceholder';
 
@@ -98,9 +112,12 @@ interface Props {
   rounds: MatchWithData[][];
   champion: BracketPlacement | null;
   bracketStatus?: string;
+  isDoubleElimination?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  isDoubleElimination: false,
+});
 const matchHeight = 6; // rem
 
 // Calculate how many horizontal connectors are needed for this round
@@ -120,6 +137,19 @@ function getConnectorCount(roundIndex: number): number {
 }
 
 function getConnectorStyle(roundIndex: number, connectorIndex: number) {
+  // Special handling for double elimination: Round 3 to Round 4 connector
+  if (props.isDoubleElimination && roundIndex === 2 && props.rounds.length - 1 === 3) {
+    const round3Offset = calculateRoundOffset(2);
+    const round3ConnectorPosition = round3Offset + matchHeight / 2;
+    const verticalConnectorLength = 4;
+
+    // Position horizontal connector to overlap with vertical line (no gap)
+    // Fine-tuned to align perfectly
+    return {
+      top: `${round3ConnectorPosition + verticalConnectorLength - 0.125}rem`,
+    };
+  }
+
   // Special handling for last round to champion connector
   if (roundIndex === props.rounds.length - 1) {
     const lastRoundOffset = getConnectorOffset(roundIndex);
@@ -206,19 +236,56 @@ function calculateRoundOffset(roundIndex: number): number {
 }
 
 function getBracketMatchOffset(roundIndex: number) {
-  const offset = calculateRoundOffset(roundIndex);
+  let offset = calculateRoundOffset(roundIndex);
+
+  // For double elimination: align Round 4 with Round 3's connector position, then add padding
+  if (props.isDoubleElimination && roundIndex === 3 && roundIndex === props.rounds.length - 1) {
+    // Get Round 3's offset and calculate its center (where the connector is)
+    const round3Offset = calculateRoundOffset(2);
+    const round3ConnectorPosition = round3Offset + matchHeight / 2;
+
+    // Position Round 4 accounting for:
+    // - 4rem vertical connector from Round 3
+    // - Align to player 1 position (25% from top of Round 4 match)
+    // - Additional padding for position marker visibility
+    const verticalConnectorLength = 4; // 4rem vertical line
+    const paddingTop = 0; // No additional spacing needed with longer connector
+    offset = round3ConnectorPosition + verticalConnectorLength - matchHeight * 0.25 + paddingTop;
+  }
+
   return {
     '--round-offset': `${offset}rem`,
   };
 }
 
 function getConnectorOffset(roundIndex: number): number {
-  return calculateRoundOffset(roundIndex);
+  let offset = calculateRoundOffset(roundIndex);
+
+  // Apply the same double elimination adjustment as Round 4
+  if (props.isDoubleElimination && roundIndex === 3 && roundIndex === props.rounds.length - 1) {
+    const round3Offset = calculateRoundOffset(2);
+    const round3ConnectorPosition = round3Offset + matchHeight / 2;
+    const verticalConnectorLength = 4;
+    const paddingTop = 0;
+    offset = round3ConnectorPosition + verticalConnectorLength - matchHeight * 0.25 + paddingTop;
+  }
+
+  return offset;
 }
 
 function getChampionOffset() {
   const lastRoundIndex = props.rounds.length - 1;
-  const lastRoundOffset = calculateRoundOffset(lastRoundIndex);
+  let lastRoundOffset = calculateRoundOffset(lastRoundIndex);
+
+  // Apply the same double elimination adjustment as Round 4
+  if (props.isDoubleElimination && lastRoundIndex === 3) {
+    const round3Offset = calculateRoundOffset(2);
+    const round3ConnectorPosition = round3Offset + matchHeight / 2;
+    const verticalConnectorLength = 4;
+    const paddingTop = 0;
+    lastRoundOffset =
+      round3ConnectorPosition + verticalConnectorLength - matchHeight * 0.25 + paddingTop;
+  }
 
   const connectorPosition = lastRoundOffset + matchHeight / 2;
   const championContainerHeight = 8;
@@ -290,23 +357,27 @@ function getChampionOffset() {
   position: relative;
 }
 
-.round[data-round='1'] .matches :deep(.match:not(:last-child)) {
+.match-wrapper {
+  position: relative;
+}
+
+.round[data-round='1'] .matches .match-wrapper:not(:last-child) {
   margin-bottom: 2rem;
 }
 
-.round[data-round='2'] .matches :deep(.match:not(:last-child)) {
+.round[data-round='2'] .matches .match-wrapper:not(:last-child) {
   margin-bottom: calc(v-bind('getMatchSpacing(1)') * 1rem);
 }
 
-.round[data-round='3'] .matches :deep(.match:not(:last-child)) {
+.round[data-round='3'] .matches .match-wrapper:not(:last-child) {
   margin-bottom: calc(v-bind('getMatchSpacing(2)') * 1rem);
 }
 
-.round[data-round='4'] .matches :deep(.match:not(:last-child)) {
+.round[data-round='4'] .matches .match-wrapper:not(:last-child) {
   margin-bottom: calc(v-bind('getMatchSpacing(3)') * 1rem);
 }
 
-.round[data-round='5'] .matches :deep(.match:not(:last-child)) {
+.round[data-round='5'] .matches .match-wrapper:not(:last-child) {
   margin-bottom: calc(v-bind('getMatchSpacing(4)') * 1rem);
 }
 
@@ -348,7 +419,7 @@ function getChampionOffset() {
 }
 
 /* Vertical connectors for Round 1 */
-.round[data-round='1'] .matches :deep(.match:nth-child(odd)::before) {
+.round[data-round='1'] .matches .match-wrapper:nth-child(odd) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -358,7 +429,7 @@ function getChampionOffset() {
   background: #51a2ff;
 }
 
-.round[data-round='1'] .matches :deep(.match:nth-child(even)::before) {
+.round[data-round='1'] .matches .match-wrapper:nth-child(even) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -369,7 +440,7 @@ function getChampionOffset() {
 }
 
 /* Vertical connectors for Round 2 */
-.round[data-round='2'] .matches :deep(.match:nth-child(odd)::before) {
+.round[data-round='2'] .matches .match-wrapper:nth-child(odd) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -379,7 +450,7 @@ function getChampionOffset() {
   background: #51a2ff;
 }
 
-.round[data-round='2'] .matches :deep(.match:nth-child(even)::before) {
+.round[data-round='2'] .matches .match-wrapper:nth-child(even) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -390,7 +461,7 @@ function getChampionOffset() {
 }
 
 /* Vertical connectors for Round 3 */
-.round[data-round='3'] .matches :deep(.match:nth-child(odd)::before) {
+.round[data-round='3'] .matches .match-wrapper:nth-child(odd) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -400,7 +471,7 @@ function getChampionOffset() {
   background: #51a2ff;
 }
 
-.round[data-round='3'] .matches :deep(.match:nth-child(even)::before) {
+.round[data-round='3'] .matches .match-wrapper:nth-child(even) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -408,10 +479,31 @@ function getChampionOffset() {
   width: 2px;
   height: calc(100% + v-bind('getMatchSpacing(2)') * 1rem);
   background: #51a2ff;
+}
+
+/* For double elimination: create vertical connector from Round 3 to Round 4 */
+.round[data-round='3'].is-double-elim:has(~ .round[data-round='4'].is-last-round)
+  .matches
+  .match-wrapper:first-child
+  :deep(.match::before) {
+  height: 4rem !important; /* Vertical line extending to Round 4 player 1 area */
+  width: 2px !important; /* Ensure width matches other connectors */
+}
+
+/* Hide other Round 3 connectors for double elimination finals */
+.round[data-round='3'].is-double-elim:has(~ .round[data-round='4'].is-last-round)
+  .matches
+  .match-wrapper:nth-child(even)
+  :deep(.match::before) {
+  display: none !important;
 }
 
 /* Vertical connectors for Round 4 */
-.round[data-round='4'] .matches :deep(.match:nth-child(odd)::before) {
+/* Skip the first match since it gets the position indicator instead */
+.round[data-round='4']
+  .matches
+  .match-wrapper:nth-child(odd):not(:first-child)
+  :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -421,7 +513,7 @@ function getChampionOffset() {
   background: #51a2ff;
 }
 
-.round[data-round='4'] .matches :deep(.match:nth-child(even)::before) {
+.round[data-round='4'] .matches .match-wrapper:nth-child(even) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -431,8 +523,21 @@ function getChampionOffset() {
   background: #51a2ff;
 }
 
+/* For double elimination, when Round 4 is the last round, hide vertical connectors entirely */
+/* The last round only has one match, so no vertical connectors needed */
+.round[data-round='4'].is-last-round
+  .matches
+  .match-wrapper:nth-child(odd):not(:first-child)
+  :deep(.match::before) {
+  display: none;
+}
+
+.round[data-round='4'].is-last-round .matches .match-wrapper:nth-child(even) :deep(.match::before) {
+  display: none;
+}
+
 /* Vertical connectors for Round 5 */
-.round[data-round='5'] .matches :deep(.match:nth-child(odd)::before) {
+.round[data-round='5'] .matches .match-wrapper:nth-child(odd) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -442,7 +547,7 @@ function getChampionOffset() {
   background: #51a2ff;
 }
 
-.round[data-round='5'] .matches :deep(.match:nth-child(even)::before) {
+.round[data-round='5'] .matches .match-wrapper:nth-child(even) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -452,7 +557,12 @@ function getChampionOffset() {
   background: #51a2ff;
 }
 /* Prevent vertical connectors on the last round before champion */
-.round.is-last-round .matches :deep(.match::before) {
+.round.is-last-round .matches .match-wrapper :deep(.match::before) {
+  display: none !important;
+}
+
+/* Extra specific rule for Round 4 when it's the last round */
+.round[data-round='4'].is-last-round .matches .match-wrapper :deep(.match::before) {
   display: none !important;
 }
 
@@ -469,38 +579,23 @@ function getChampionOffset() {
   display: block !important; /* Override the earlier display: none */
 }
 
-/* Dynamic spacing for all rounds */
-.round[data-round='1'] .matches :deep(.match:not(:last-child)) {
-  margin-bottom: 2rem;
-}
-
-.round[data-round='2'] .matches :deep(.match:not(:last-child)) {
-  margin-bottom: calc(v-bind('getMatchSpacing(1)') * 1rem);
-}
-
-.round[data-round='3'] .matches :deep(.match:not(:last-child)) {
-  margin-bottom: calc(v-bind('getMatchSpacing(2)') * 1rem);
-}
-
-.round[data-round='4'] .matches :deep(.match:not(:last-child)) {
-  margin-bottom: calc(v-bind('getMatchSpacing(3)') * 1rem);
-}
-
-.round[data-round='5'] .matches :deep(.match:not(:last-child)) {
-  margin-bottom: calc(v-bind('getMatchSpacing(4)') * 1rem);
-}
-
-.round[data-round='0'] .matches :deep(.match:not(:last-child)) {
+/* Dynamic spacing for all rounds - already handled above, removing duplicates */
+.round[data-round='0'] .matches .match-wrapper:not(:last-child) {
   margin-bottom: 2rem;
 }
 
 /* Round 6 spacing */
-.round[data-round='6'] .matches :deep(.match:not(:last-child)) {
+.round[data-round='6'] .matches .match-wrapper:not(:last-child) {
   margin-bottom: calc(v-bind('getMatchSpacing(5)') * 1rem);
 }
 
+/* Round 7 spacing */
+.round[data-round='7'] .matches .match-wrapper:not(:last-child) {
+  margin-bottom: calc(v-bind('getMatchSpacing(6)') * 1rem);
+}
+
 /* Vertical connectors for Round 6 */
-.round[data-round='6'] .matches :deep(.match:nth-child(odd)::before) {
+.round[data-round='6'] .matches .match-wrapper:nth-child(odd) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -510,7 +605,7 @@ function getChampionOffset() {
   background: #51a2ff;
 }
 
-.round[data-round='6'] .matches :deep(.match:nth-child(even)::before) {
+.round[data-round='6'] .matches .match-wrapper:nth-child(even) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -520,13 +615,8 @@ function getChampionOffset() {
   background: #51a2ff;
 }
 
-/* Round 7 spacing (for future 64-player brackets) */
-.round[data-round='7'] .matches :deep(.match:not(:last-child)) {
-  margin-bottom: calc(v-bind('getMatchSpacing(6)') * 1rem);
-}
-
 /* Vertical connectors for Round 7 */
-.round[data-round='7'] .matches :deep(.match:nth-child(odd)::before) {
+.round[data-round='7'] .matches .match-wrapper:nth-child(odd) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -536,7 +626,7 @@ function getChampionOffset() {
   background: #51a2ff;
 }
 
-.round[data-round='7'] .matches :deep(.match:nth-child(even)::before) {
+.round[data-round='7'] .matches .match-wrapper:nth-child(even) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
