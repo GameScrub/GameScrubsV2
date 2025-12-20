@@ -185,13 +185,13 @@ interface MatchWithData extends BracketPosition {
 
 const winnersMatches = computed(() =>
   positions.value.filter(
-    (match) => match.player1?.startsWith('w') && match.player2?.startsWith('w'),
+    (match) => match.player1?.startsWith('w'),
   ),
 );
 
 const losersMatches = computed(() =>
   positions.value.filter(
-    (match) => match.player1?.startsWith('l') || match.player2?.startsWith('l'),
+    (match) => match.player1?.startsWith('l') && match.player2?.startsWith('l'),
   ),
 );
 
@@ -462,6 +462,7 @@ onUnmounted(async () => {
   flex-direction: column;
   gap: 3rem;
   min-width: max-content;
+  overflow: visible;
 }
 
 .error {

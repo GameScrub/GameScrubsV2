@@ -51,6 +51,13 @@ const badgeStyle = computed(() => {
   position: absolute;
   transform: translateY(-50%);
   z-index: 10;
+  pointer-events: none; /* Prevent blocking interactions */
+}
+
+/* Ensure the marker doesn't cause overflow */
+.position-marker .connector-line,
+.position-marker .marker-badge {
+  pointer-events: auto;
 }
 
 .connector-line {

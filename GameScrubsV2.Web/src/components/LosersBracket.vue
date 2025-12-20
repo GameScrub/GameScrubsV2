@@ -25,11 +25,7 @@
       <!-- Rounds with Matches -->
       <div class="rounds">
         <template v-for="(round, roundIndex) in rounds" :key="`losers-${roundIndex}`">
-          <div
-            class="round"
-            :data-round="roundIndex + 1"
-            :style="getRoundOffset(roundIndex)"
-          >
+          <div class="round" :data-round="roundIndex + 1" :style="getRoundOffset(roundIndex)">
             <div class="matches">
               <template v-for="(match, matchIndex) in round" :key="match.id">
                 <div class="match-wrapper">
@@ -39,13 +35,17 @@
                     :show-scores="false"
                     :bracket-status="bracketStatus"
                   />
-                  <!-- Position marker for last match in Round 4 (only for double elimination) -->
+                  <!-- Position marker for last match in losers finals (only for double elimination) -->
                   <PositionMarker
-                    v-if="isDoubleElimination && roundIndex === 3 && matchIndex === round.length - 1"
+                    v-if="
+                      isDoubleElimination &&
+                      roundIndex === rounds.length - 1 &&
+                      matchIndex === round.length - 1
+                    "
                     :number="1"
                     position="right"
                     :vertical-position="50"
-                    :connector-length="4"
+                    :connector-length="2"
                   />
                 </div>
               </template>
@@ -53,10 +53,7 @@
           </div>
 
           <!-- Connector space between rounds -->
-          <div
-            v-if="roundIndex < rounds.length - 1"
-            class="connector-space"
-          >
+          <div v-if="roundIndex < rounds.length - 1" class="connector-space">
             <div
               v-for="(_, connectorIndex) in getConnectorCount(roundIndex)"
               :key="`connector-${roundIndex}-${connectorIndex}`"
@@ -94,85 +91,109 @@ const props = withDefaults(defineProps<Props>(), {
 
 const matchHeight = 6; // rem - half of match height is 3rem
 
-function getRoundOffset(roundIndex: number) {
-  // Round 1 stays at 0
-  if (roundIndex === 0) {
-    return { '--round-offset': '0rem' };
-  }
-  // Round 2 gets offset down by 1.5rem so its player1 position aligns with Round 1 match centers
-  if (roundIndex === 1) {
-    return { '--round-offset': '1.5rem' };
-  }
-  // Round 3 needs to align with Round 2's vertical connectors
-  if (roundIndex === 2) {
-    const round2Offset = 1.5; // rem
-    const matchSpacing = 2; // gap between matches in rem
+// Calculate the gap between matches for a given round
+function getMatchGap(roundIndex: number): number {
+  const round = props.rounds[roundIndex];
+  if (!round) return 2;
 
-    // Position of first match in Round 2
-    const match1Top = round2Offset;
-    const match1Center = match1Top + matchHeight / 2;
+  // Round 0 always has 2rem gap
+  if (roundIndex === 0) return 2;
 
-    // Position of second match in Round 2
-    const match2Top = round2Offset + matchHeight + matchSpacing;
-    const match2Center = match2Top + matchHeight / 2;
+  // For losers bracket, we need to calculate spacing iteratively
+  // The pattern alternates: 2-to-1, 1-to-1, 2-to-1, 1-to-1, etc.
+  let spacing = 2;
 
-    // Junction point is midpoint between the two match centers
-    const junctionPosition = (match1Center + match2Center) / 2;
+  for (let i = 1; i <= roundIndex; i++) {
+    const currentRound = props.rounds[i];
+    const prevRound = props.rounds[i - 1];
 
-    // Round 3 first match's player 1 position should align with the junction
-    // Player 1 is at matchTop + 1.5rem, so matchTop = junctionPosition - 1.5rem
-    const round3Offset = junctionPosition - 1.5;
+    if (!currentRound || !prevRound) continue;
 
-    return { '--round-offset': `${round3Offset}rem` };
-  }
-
-  // Round 4+ handling
-  if (roundIndex === 3) {
-    // Check if Round 3 matches feed into Round 4 with 2-to-1 pattern
-    const round3MatchCount = props.rounds[2]?.length || 0;
-    const round4MatchCount = props.rounds[3]?.length || 0;
-
-    // If Round 3 has 2x matches as Round 4, use junction pattern (like Round 2→3)
-    if (round3MatchCount === round4MatchCount * 2) {
-      const round3Offset = calculateRound3Offset();
-      const matchSpacing = 2; // gap between matches in rem
-
-      // Position of first match in Round 3
-      const match1Top = round3Offset;
-      const match1Center = match1Top + matchHeight / 2;
-
-      // Position of second match in Round 3
-      const match2Top = round3Offset + matchHeight + matchSpacing;
-      const match2Center = match2Top + matchHeight / 2;
-
-      // Junction point is midpoint between the two match centers
-      const junctionPosition = (match1Center + match2Center) / 2;
-
-      // Round 4 first match's player 1 position should align with the junction
-      const round4Offset = junctionPosition - 1.5;
-
-      return { '--round-offset': `${round4Offset}rem` };
+    // Check if it's a 2-to-1 pattern
+    if (prevRound.length === currentRound.length * 2) {
+      // 2-to-1: matches spread out to align with junction points
+      spacing = 2 * (matchHeight + spacing) - matchHeight;
     } else {
-      // Direct 1-to-1 connection (like Round 1→2), use same offset as Round 3
-      return { '--round-offset': `${calculateRound3Offset() + 1.5}rem` };
+      // 1-to-1: spacing stays the same
+      // No change to spacing
     }
   }
 
-  return { '--round-offset': '1.5rem' };
+  return spacing;
 }
 
-function calculateRound3Offset(): number {
-  const round2Offset = 1.5;
-  const matchSpacing = 2;
+function getRoundOffset(roundIndex: number) {
+  // Round 0 (first round) stays at 0
+  if (roundIndex === 0) {
+    return { '--round-offset': '0rem', '--match-gap': '2rem' };
+  }
 
-  const match1Top = round2Offset;
-  const match1Center = match1Top + matchHeight / 2;
+  // Calculate offset dynamically based on previous round
+  const offset = calculateDynamicRoundOffset(roundIndex);
+  const gap = getMatchGap(roundIndex);
+  return { '--round-offset': `${offset}rem`, '--match-gap': `${gap}rem` };
+}
 
-  const match2Top = round2Offset + matchHeight + matchSpacing;
-  const match2Center = match2Top + matchHeight / 2;
+function calculateDynamicRoundOffset(roundIndex: number): number {
+  if (roundIndex === 0) {
+    return 0;
+  }
 
-  const junctionPosition = (match1Center + match2Center) / 2;
-  return junctionPosition - 1.5;
+  const prevRoundIndex = roundIndex - 1;
+  const prevRound = props.rounds[prevRoundIndex];
+  const currentRound = props.rounds[roundIndex];
+
+  if (!prevRound || !currentRound) {
+    return 1.5;
+  }
+
+  const prevRoundOffset = calculateDynamicRoundOffset(prevRoundIndex);
+  const prevMatchGap = getMatchGap(prevRoundIndex); // Use dynamic gap calculation
+
+  // Check if it's a 2-to-1 pattern (junction connector)
+  if (prevRound.length === currentRound.length * 2) {
+    // For larger brackets, offset to align with middle matches
+    // baseMatchIndex determines which pair of matches from the previous round to use as reference
+    let baseMatchIndex = 0;
+
+    // Only offset for the very first 2-to-1 transition (Round 1→2)
+    if (prevRoundIndex === 0) {
+      if (prevRound.length >= 16) {
+        // For 32-man brackets (16→8), skip first 2 matches
+        baseMatchIndex = 2;
+      } else if (prevRound.length >= 8) {
+        // For 16-man brackets (8→4), skip first 1 match
+        baseMatchIndex = 1;
+      }
+    } else {
+      // For subsequent 2-to-1 transitions (e.g., Round 2→3, Round 4→5)
+      // We need to offset by the match index that corresponds to this current match
+      // For Round 3 Match 0: align with Round 2 Match 0
+      // For Round 3 Match 1: align with Round 2 Match 2
+      // This means baseMatchIndex should remain 0 for Match 0, but we need to handle each match separately
+      // However, calculateDynamicRoundOffset calculates the FIRST match position
+      // So for Round 3, we align the first match (Match 0) with Round 2's Match 0
+      baseMatchIndex = 0;
+    }
+
+    const match1Top = prevRoundOffset + baseMatchIndex * (matchHeight + prevMatchGap);
+    const match1Center = match1Top + matchHeight / 2;
+
+    const match2Top = prevRoundOffset + (baseMatchIndex + 1) * (matchHeight + prevMatchGap);
+    const match2Center = match2Top + matchHeight / 2;
+
+    const junctionPosition = (match1Center + match2Center) / 2;
+
+    // Align current round's first match player 1 position with junction
+    return junctionPosition - 1.5;
+  } else {
+    // Direct 1-to-1 connection - align this round's player 1 position with previous round's match center
+    // Previous round's first match center is at prevRoundOffset + matchHeight/2
+    // This round's player 1 is at offset + 1.5
+    // So: offset + 1.5 = prevRoundOffset + matchHeight/2
+    // offset = prevRoundOffset + 3 - 1.5 = prevRoundOffset + 1.5
+    return prevRoundOffset + 1.5;
+  }
 }
 
 // Calculate how many horizontal connectors are needed for the connector-space
@@ -200,55 +221,27 @@ function getConnectorCount(roundIndex: number): number {
 }
 
 function getConnectorStyle(roundIndex: number, connectorIndex: number) {
-  // Round 2 to Round 3 connectors
-  if (roundIndex === 1) {
-    const round2Offset = 1.5; // rem - Round 2 starts at 1.5rem
-    const matchSpacing = 2; // gap between matches in rem
+  // Generic connector positioning for any round with 2-to-1 pattern
+  const currentRoundOffset = calculateDynamicRoundOffset(roundIndex);
+  const currentMatchGap = getMatchGap(roundIndex); // Use dynamic gap calculation
 
-    // Get the two matches from Round 2 that feed into this connector
-    const match1Index = connectorIndex * 2;
-    const match2Index = match1Index + 1;
+  // Get the two matches from current round that feed into this connector
+  const match1Index = connectorIndex * 2;
+  const match2Index = match1Index + 1;
 
-    // Calculate absolute positions including Round 2's offset
-    const match1Top = round2Offset + match1Index * (matchHeight + matchSpacing);
-    const match1Center = match1Top + matchHeight / 2;
+  // Calculate absolute positions including current round's offset
+  const match1Top = currentRoundOffset + match1Index * (matchHeight + currentMatchGap);
+  const match1Center = match1Top + matchHeight / 2;
 
-    const match2Top = round2Offset + match2Index * (matchHeight + matchSpacing);
-    const match2Center = match2Top + matchHeight / 2;
+  const match2Top = currentRoundOffset + match2Index * (matchHeight + currentMatchGap);
+  const match2Center = match2Top + matchHeight / 2;
 
-    // Junction point is the midpoint between the two match centers
-    const junctionPosition = (match1Center + match2Center) / 2;
+  // Junction point is the midpoint between the two match centers
+  const junctionPosition = (match1Center + match2Center) / 2;
 
-    return {
-      top: `${junctionPosition}rem`,
-    };
-  }
-
-  // Round 3 to Round 4 connectors
-  if (roundIndex === 2) {
-    const round3Offset = calculateRound3Offset();
-    const matchSpacing = 2; // gap between matches in rem
-
-    // Get the two matches from Round 3 that feed into this connector
-    const match1Index = connectorIndex * 2;
-    const match2Index = match1Index + 1;
-
-    // Calculate absolute positions including Round 3's offset
-    const match1Top = round3Offset + match1Index * (matchHeight + matchSpacing);
-    const match1Center = match1Top + matchHeight / 2;
-
-    const match2Top = round3Offset + match2Index * (matchHeight + matchSpacing);
-    const match2Center = match2Top + matchHeight / 2;
-
-    // Junction point is the midpoint between the two match centers
-    const junctionPosition = (match1Center + match2Center) / 2;
-
-    return {
-      top: `${junctionPosition}rem`,
-    };
-  }
-
-  return { top: '0rem' };
+  return {
+    top: `${junctionPosition}rem`,
+  };
 }
 </script>
 
@@ -258,7 +251,9 @@ function getConnectorStyle(roundIndex: number, connectorIndex: number) {
 .losers-bracket {
   border-radius: 8px;
   padding: 2rem;
+  padding-right: 4rem; /* Extra padding to contain position marker */
   box-shadow: 0 2px 8px rgb(90, 120, 250);
+  overflow: visible;
 }
 
 .round-headers {
@@ -276,6 +271,7 @@ function getConnectorStyle(roundIndex: number, connectorIndex: number) {
   gap: 0;
   position: relative;
   align-items: flex-start;
+  overflow: visible; /* Ensure position markers don't cause scroll */
 }
 
 .round {
@@ -290,19 +286,20 @@ function getConnectorStyle(roundIndex: number, connectorIndex: number) {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2rem;
+  gap: var(--match-gap, 2rem);
   flex: 1;
 }
 
 .match-wrapper {
   position: relative;
+  overflow: visible; /* Allow position markers to extend outside */
 }
 
 .matches :deep(.match) {
   position: relative;
 }
 
-/* Horizontal connectors - each Round 1 match connects to corresponding Round 2 match */
+/* Horizontal connectors - default for 1-to-1 connections */
 .matches :deep(.match::after) {
   content: '';
   position: absolute;
@@ -314,10 +311,9 @@ function getConnectorStyle(roundIndex: number, connectorIndex: number) {
   transform: translateY(-50%);
 }
 
-/* Hide horizontal connectors on Round 2 matches (they use the connector-space instead) */
-.round[data-round='2'] .matches :deep(.match::after) {
-  width: 2rem;
-  right: -2rem;
+/* Hide connector on last round */
+.round:last-of-type .matches :deep(.match::after) {
+  display: none;
 }
 
 /* Vertical connectors for Round 2 - standard bracket pattern */
@@ -327,7 +323,7 @@ function getConnectorStyle(roundIndex: number, connectorIndex: number) {
   right: -2rem;
   top: 50%;
   width: 2px;
-  height: calc(100% + 2rem);
+  height: calc(100% + var(--match-gap, 2rem));
   background: #dc2626;
 }
 
@@ -337,34 +333,75 @@ function getConnectorStyle(roundIndex: number, connectorIndex: number) {
   right: -2rem;
   bottom: 50%;
   width: 2px;
-  height: calc(100% + 2rem);
+  height: calc(100% + var(--match-gap, 2rem));
   background: #dc2626;
 }
 
-/* Adjust Round 3 horizontal connectors when there's a 2-to-1 pattern */
-.round[data-round='3']:has(~ .connector-space .horizontal-connector) .matches :deep(.match::after) {
+/* Round 2: Shorten horizontal connectors (2-to-1 pattern with junction) */
+.round[data-round='2'] .matches :deep(.match::after) {
   width: 2rem;
   right: -2rem;
 }
 
-/* Vertical connectors for Round 3 - only when there's a 2-to-1 pattern */
-.round[data-round='3']:has(~ .connector-space .horizontal-connector) .matches .match-wrapper:nth-child(odd) :deep(.match::before) {
+/* For any other round with junction connectors, shorten the horizontal connectors */
+/* This uses :has(+ .connector-space .horizontal-connector) to check ONLY the immediate next connector-space */
+.round[data-round='3']:has(+ .connector-space .horizontal-connector) .matches :deep(.match::after),
+.round[data-round='4']:has(+ .connector-space .horizontal-connector) .matches :deep(.match::after),
+.round[data-round='5']:has(+ .connector-space .horizontal-connector) .matches :deep(.match::after),
+.round[data-round='6']:has(+ .connector-space .horizontal-connector) .matches :deep(.match::after) {
+  width: 2rem;
+  right: -2rem;
+}
+
+/* Vertical connectors for rounds with 2-to-1 pattern */
+/* Only add vertical connectors if the immediate next connector-space has junction connectors */
+.round[data-round='3']:has(+ .connector-space .horizontal-connector)
+  .matches
+  .match-wrapper:nth-child(odd)
+  :deep(.match::before),
+.round[data-round='4']:has(+ .connector-space .horizontal-connector)
+  .matches
+  .match-wrapper:nth-child(odd)
+  :deep(.match::before),
+.round[data-round='5']:has(+ .connector-space .horizontal-connector)
+  .matches
+  .match-wrapper:nth-child(odd)
+  :deep(.match::before),
+.round[data-round='6']:has(+ .connector-space .horizontal-connector)
+  .matches
+  .match-wrapper:nth-child(odd)
+  :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
   top: 50%;
   width: 2px;
-  height: calc(100% + 2rem);
+  height: calc(100% + var(--match-gap, 2rem));
   background: #dc2626;
 }
 
-.round[data-round='3']:has(~ .connector-space .horizontal-connector) .matches .match-wrapper:nth-child(even) :deep(.match::before) {
+.round[data-round='3']:has(+ .connector-space .horizontal-connector)
+  .matches
+  .match-wrapper:nth-child(even)
+  :deep(.match::before),
+.round[data-round='4']:has(+ .connector-space .horizontal-connector)
+  .matches
+  .match-wrapper:nth-child(even)
+  :deep(.match::before),
+.round[data-round='5']:has(+ .connector-space .horizontal-connector)
+  .matches
+  .match-wrapper:nth-child(even)
+  :deep(.match::before),
+.round[data-round='6']:has(+ .connector-space .horizontal-connector)
+  .matches
+  .match-wrapper:nth-child(even)
+  :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
   bottom: 50%;
   width: 2px;
-  height: calc(100% + 2rem);
+  height: calc(100% + var(--match-gap, 2rem));
   background: #dc2626;
 }
 
@@ -383,5 +420,4 @@ function getConnectorStyle(roundIndex: number, connectorIndex: number) {
   left: 2rem;
   background: #dc2626;
 }
-
 </style>
