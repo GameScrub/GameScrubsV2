@@ -15,4 +15,5 @@ public partial class BracketPosition
 	public string? WinLocation { get; set; }
 
 	public string? LoseLocation { get; set; }
+	public int? MarkerPosition { get; set; }
 }

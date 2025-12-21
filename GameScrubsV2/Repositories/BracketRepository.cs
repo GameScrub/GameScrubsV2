@@ -25,23 +25,17 @@ public sealed class BracketRepository
 	private const string AllCacheKey = $"{CacheKeyPrefix}:all";
 	private static string GetCacheKey(int id) => $"{CacheKeyPrefix}:{id}";
 
-	public async Task<IEnumerable<Bracket>?> GetAllAsync(CancellationToken cancellationToken)
-	{
-		_logger.LogDebug("Fetching all brackets");
-
-		return await _cache.GetOrCreateAsync(AllCacheKey, async _ => await _dbContext.Brackets
-				.AsNoTracking()
-				.OrderBy(dbSeason => dbSeason.StartDate)
-				.ToArrayAsync(cancellationToken));
-	}
+	public async Task<IEnumerable<Bracket>?> GetAllAsync(CancellationToken cancellationToken) =>
+		await _cache.GetOrCreateAsync(AllCacheKey, async _ => await _dbContext.Brackets
+			.AsNoTracking()
+			.OrderBy(dbSeason => dbSeason.StartDate)
+			.ToArrayAsync(cancellationToken));
 
 	public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken) =>
 		(await GetByIdAsync(id, cancellationToken)) is not null;
 
 	public async Task<Bracket?> GetByIdAsync(int id, CancellationToken cancellationToken)
 	{
-		_logger.LogDebug("Fetching season {SeasonId}", id);
-
 		var bracket = await _cache.GetOrCreateAsync(GetCacheKey(id), async _ => await _dbContext.Brackets
 				.AsNoTracking()
 				.FirstOrDefaultAsync(dbBracket => dbBracket.Id == id, cancellationToken));

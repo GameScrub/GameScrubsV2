@@ -24,6 +24,12 @@
         </div>
       </div>
     </div>
+
+    <!-- Position Marker -->
+    <div v-if="positionMarker || markerIcon" class="position-marker">
+      <component v-if="markerIcon" :is="markerIcon" :size="16" :stroke-width="2" />
+      <span v-else>{{ toRoman(positionMarker!) }}</span>
+    </div>
   </div>
 
   <!-- Options Modal -->
@@ -76,9 +82,7 @@
           </button>
 
           <!-- VS Icon/Text -->
-          <div class="flex-shrink-0 text-gray-400 dark:text-gray-500 font-bold text-xl">
-            VS
-          </div>
+          <div class="flex-shrink-0 text-gray-400 dark:text-gray-500 font-bold text-xl">VS</div>
 
           <button
             @click="setWinner(player2)"
@@ -125,12 +129,16 @@ import { BracketStatus } from '@/models/BracketStatus';
 import { PlayerPlaceholder } from '@/models/PlayerPlaceholder';
 import ModalEmpty from '@/components/ModalEmpty.vue';
 import type { useNotification } from '@/composables/useNotification';
+import type { Component } from 'vue';
 
 interface Props {
   player1: BracketPlacement | null;
   player2: BracketPlacement | null;
   showScores?: boolean;
   bracketStatus?: string;
+  positionMarker?: number;
+  isWinnersBracket?: boolean;
+  markerIcon?: Component;
 }
 
 const notification = inject<ReturnType<typeof useNotification>>('notification');
@@ -148,6 +156,30 @@ const lockCode = computed(() => {
   const bracketId = props.player1?.bracketId || props.player2?.bracketId;
   return bracketId ? bracketStore.getLockCode(bracketId) : undefined;
 });
+
+// Convert number to Roman numerals
+function toRoman(num: number): string {
+  if (num === 0) return '';
+
+  const romanNumerals = [
+    { value: 50, numeral: 'L' },
+    { value: 40, numeral: 'XL' },
+    { value: 10, numeral: 'X' },
+    { value: 9, numeral: 'IX' },
+    { value: 5, numeral: 'V' },
+    { value: 4, numeral: 'IV' },
+    { value: 1, numeral: 'I' },
+  ];
+
+  let result = '';
+  for (const { value, numeral } of romanNumerals) {
+    while (num >= value) {
+      result += numeral;
+      num -= value;
+    }
+  }
+  return result;
+}
 
 const isModalOpen = ref(false);
 
@@ -243,6 +275,7 @@ function getPlayerClass(player: BracketPlacement) {
 @import '../css/style.css' reference;
 
 .match {
+  position: relative;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
@@ -301,5 +334,44 @@ function getPlayerClass(player: BracketPlacement) {
 
 .loser .score {
   color: #ef4444;
+}
+
+.position-marker {
+  position: absolute;
+  right: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  border: 1px solid #d1d5db;
+  border-radius: 0.625rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  z-index: 5;
+}
+
+.match:hover .position-marker {
+  background: #d1d5db;
+  border-color: #9ca3af;
+  color: #4b5563;
+}
+
+:global(.dark) .position-marker {
+  background: #374151;
+  border-color: #4b5563;
+  color: #9ca3af;
+}
+
+:global(.dark) .match:hover .position-marker {
+  background: #4b5563;
+  border-color: #6b7280;
+  color: #d1d5db;
 }
 </style>

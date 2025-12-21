@@ -322,7 +322,7 @@ const loadData = async () => {
 
     [placements.value, positions.value] = await Promise.all([
       bracketPlacementService.getBracketPlacements(bracketId),
-      bracketPlacementService.getBrackePositions(bracketId),
+      bracketService.getPositionsByType(bracket.value.type),
     ]);
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'An error occurred';
@@ -341,7 +341,7 @@ const refreshData = async () => {
 
     [placements.value, positions.value] = await Promise.all([
       bracketPlacementService.getBracketPlacements(bracketId),
-      bracketPlacementService.getBrackePositions(bracketId),
+      bracketService.getPositionsByType(bracket.value.type),
     ]);
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'An error occurred';

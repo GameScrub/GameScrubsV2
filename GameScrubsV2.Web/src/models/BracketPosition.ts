@@ -7,4 +7,5 @@ export interface BracketPosition {
   player2: string | null;
   winLocation: string | null;
   loseLocation: string | null;
+  markerPosition: number | null;
 }

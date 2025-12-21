@@ -50,14 +50,9 @@
                     :player2="match.player2Data"
                     :show-scores="false"
                     :bracket-status="bracketStatus"
-                  />
-                  <!-- Position marker for first match in finals (only for double elimination) -->
-                  <PositionMarker
-                    v-if="isDoubleElimination && roundIndex === rounds.length - 1 && matchIndex === 0"
-                    :number="1"
-                    position="left"
-                    :vertical-position="75"
-                    :connector-length="4"
+                    :position-marker="getPositionMarker(match)"
+                    :marker-icon="showTrophyIcon(match, roundIndex, matchIndex) ? IconTrophyFilled : undefined"
+                    :is-winners-bracket="true"
                   />
                 </div>
               </template>
@@ -98,15 +93,17 @@
 
 <script setup lang="ts">
 import BracketMatch from '@/components/BracketMatch.vue';
-import PositionMarker from '@/components/PositionMarker.vue';
 import type { BracketPlacement } from '@/models/BracketPlacement';
 import { PlayerPlaceholder } from '@/models/PlayerPlaceholder';
+import { IconTrophyFilled } from '@tabler/icons-vue';
 
 interface MatchWithData {
   id: number;
   player1Data: BracketPlacement | null;
   player2Data: BracketPlacement | null;
   round: number;
+  loseLocation?: string | null;
+  markerPosition?: number | null;
 }
 
 interface Props {
@@ -120,6 +117,31 @@ const props = withDefaults(defineProps<Props>(), {
   isDoubleElimination: false,
 });
 const matchHeight = 6; // rem
+
+// Helper function to get position marker or icon for a match
+function getPositionMarker(match: MatchWithData): number | undefined {
+  if (!props.isDoubleElimination) return undefined;
+
+  // If markerPosition is -1, show trophy icon (handled separately in template)
+  // If markerPosition is null or undefined, show no marker
+  // Otherwise, show the marker number
+  if (match.markerPosition === null || match.markerPosition === undefined || match.markerPosition === -1) {
+    return undefined;
+  }
+
+  return match.markerPosition;
+}
+
+function showTrophyIcon(match: MatchWithData, roundIndex: number, matchIndex: number): boolean {
+  if (!props.isDoubleElimination) return false;
+
+  // Show trophy if markerPosition is -1 (Grand Finals from winners)
+  if (match.markerPosition === -1 && roundIndex === props.rounds.length - 1 && matchIndex === 0) {
+    return true;
+  }
+
+  return false;
+}
 
 // Calculate how many horizontal connectors are needed for this round
 function getConnectorCount(roundIndex: number): number {
@@ -298,6 +320,7 @@ function getChampionOffset() {
     '--round-offset': `${offset}rem`,
   };
 }
+
 </script>
 
 <style scoped>

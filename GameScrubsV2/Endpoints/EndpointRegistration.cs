@@ -40,6 +40,7 @@ public static class EndpointRegistration
 			group.UpdateBracket();
 			group.DeleteBracket();
 			group.ChangeBracketStatus();
+			group.GetBracketPositions();
 
 			return app;
 		}
@@ -63,7 +64,6 @@ public static class EndpointRegistration
 			group.GetBracketPlacement();
 			group.SetPlacementScore();
 			group.GetPlacementScores();
-			group.GetPlacementPositions();
 
 			return app;
 		}
@@ -73,7 +73,7 @@ public static class EndpointRegistration
 			var group = app.MapGroup("/api/reports").WithTags("Reports");
 
 			group.GetRecentActivity();
-			
+
 			return app;
 		}
 	}

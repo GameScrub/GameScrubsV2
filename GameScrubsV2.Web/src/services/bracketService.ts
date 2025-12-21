@@ -1,5 +1,7 @@
 import { API_BASE_URL } from '@/api.config';
 import { type Bracket } from '@/models/Bracket';
+import type { BracketPosition } from '@/models/BracketPosition';
+import type { BracketType } from '@/models/BracketType';
 import { getErrorMessage } from './apiErrorHandler';
 
 export interface PaginatedBracketResponse {
@@ -135,6 +137,18 @@ export const bracketService = {
       const errorMessage = await getErrorMessage(response);
       throw new Error(errorMessage);
     }
+    return response.json();
+  },
+
+  // GET bracket positions by type
+  async getPositionsByType(bracketType: BracketType): Promise<BracketPosition[]> {
+    const response = await fetch(`${API_BASE_URL}/brackets/positions/${bracketType}`);
+
+    if (!response.ok) {
+      const errorMessage = await getErrorMessage(response);
+      throw new Error(errorMessage);
+    }
+
     return response.json();
   },
 };

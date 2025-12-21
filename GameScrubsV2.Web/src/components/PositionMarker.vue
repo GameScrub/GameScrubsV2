@@ -39,9 +39,10 @@ const connectorStyle = computed(() => {
 
 const badgeStyle = computed(() => {
   const direction = props.position === 'left' ? 'right' : 'left';
+  const borderColor = props.position === 'left' ? '#51a2ff' : '#dc2626';
   return {
     [direction]: `${props.connectorLength}rem`,
-    borderColor: props.color,
+    borderColor: borderColor,
   };
 });
 </script>
@@ -75,17 +76,17 @@ const badgeStyle = computed(() => {
   height: 2.5rem;
   line-height: 2.5rem;
   text-align: center;
-  background: white;
+  background: #1f2937; /* Dark gray background matching the player area */
   border: 2px solid;
   border-radius: 50%;
   font-size: 1rem;
   font-weight: bold;
-  color: #374151;
+  color: #51a2ff; /* Winner blue for the number */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 :global(.dark) .marker-badge {
-  background: #1f2937;
-  color: #e5e7eb;
+  background: #1f2937; /* Same dark gray in dark mode */
+  color: #51a2ff; /* Winner blue for the number in dark mode too */
 }
 </style>

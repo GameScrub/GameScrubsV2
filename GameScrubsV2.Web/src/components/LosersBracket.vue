@@ -34,18 +34,9 @@
                     :player2="match.player2Data"
                     :show-scores="false"
                     :bracket-status="bracketStatus"
-                  />
-                  <!-- Position marker for last match in losers finals (only for double elimination) -->
-                  <PositionMarker
-                    v-if="
-                      isDoubleElimination &&
-                      roundIndex === rounds.length - 1 &&
-                      matchIndex === round.length - 1
-                    "
-                    :number="1"
-                    position="right"
-                    :vertical-position="50"
-                    :connector-length="2"
+                    :position-marker="getPositionMarker(match)"
+                    :marker-icon="showTrophyIcon(match) ? IconTrophyFilled : undefined"
+                    :is-winners-bracket="false"
                   />
                 </div>
               </template>
@@ -62,6 +53,14 @@
             ></div>
           </div>
         </template>
+
+        <!-- Champion connector after last round -->
+        <div v-if="isDoubleElimination && rounds.length > 0" class="champion-space" :style="getChampionSpaceStyle()">
+          <div class="champion-connector"></div>
+          <div class="champion-marker">
+            <IconTrophyFilled class="trophy-icon" />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -69,14 +68,17 @@
 
 <script setup lang="ts">
 import BracketMatch from '@/components/BracketMatch.vue';
-import PositionMarker from '@/components/PositionMarker.vue';
 import type { BracketPlacement } from '@/models/BracketPlacement';
+import { IconTrophyFilled } from '@tabler/icons-vue';
 
 interface MatchWithData {
   id: number;
   player1Data: BracketPlacement | null;
   player2Data: BracketPlacement | null;
   round: number;
+  player1?: string | null;
+  player2?: string | null;
+  markerPosition?: number | null;
 }
 
 interface Props {
@@ -90,6 +92,27 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const matchHeight = 6; // rem - half of match height is 3rem
+
+// Helper function to get position marker for a match
+function getPositionMarker(match: MatchWithData): number | undefined {
+  if (!props.isDoubleElimination) return undefined;
+
+  // If markerPosition is -1, show trophy icon (handled separately in template)
+  // If markerPosition is null or undefined, show no marker
+  // Otherwise, show the marker number
+  if (match.markerPosition === null || match.markerPosition === undefined || match.markerPosition === -1) {
+    return undefined;
+  }
+
+  return match.markerPosition;
+}
+
+function showTrophyIcon(match: MatchWithData): boolean {
+  if (!props.isDoubleElimination) return false;
+
+  // Show trophy if markerPosition is -1 (Losers Finals going to Grand Finals)
+  return match.markerPosition === -1;
+}
 
 // Calculate the gap between matches for a given round
 function getMatchGap(roundIndex: number): number {
@@ -243,6 +266,17 @@ function getConnectorStyle(roundIndex: number, connectorIndex: number) {
     top: `${junctionPosition}rem`,
   };
 }
+
+function getChampionSpaceStyle() {
+  // Get the last round's offset
+  const lastRoundIndex = props.rounds.length - 1;
+  const lastRoundOffset = calculateDynamicRoundOffset(lastRoundIndex);
+
+  return {
+    '--round-offset': `${lastRoundOffset}rem`,
+  };
+}
+
 </script>
 
 <style scoped>
@@ -419,5 +453,44 @@ function getConnectorStyle(roundIndex: number, connectorIndex: number) {
   height: 2px;
   left: 2rem;
   background: #dc2626;
+}
+
+/* Champion connector and marker */
+.champion-space {
+  width: 8rem;
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  padding-top: var(--round-offset, 0);
+}
+
+.champion-connector {
+  position: absolute;
+  width: 4rem;
+  height: 2px;
+  left: 0;
+  top: calc(var(--round-offset, 0) + 3rem);
+  background: #dc2626;
+}
+
+.champion-marker {
+  position: absolute;
+  left: 4rem;
+  top: calc(var(--round-offset, 0) + 1.5rem);
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+
+.trophy-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #fff;
 }
 </style>
