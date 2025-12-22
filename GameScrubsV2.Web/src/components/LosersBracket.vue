@@ -173,6 +173,12 @@ function calculateDynamicRoundOffset(roundIndex: number): number {
   const prevRoundOffset = calculateDynamicRoundOffset(prevRoundIndex);
   const prevMatchGap = getMatchGap(prevRoundIndex); // Use dynamic gap calculation
 
+  // Check if current round has any position markers
+  const hasMarkers = currentRound.some(match =>
+    match.markerPosition !== null &&
+    match.markerPosition !== undefined
+  );
+
   // Check if it's a 2-to-1 pattern (junction connector)
   if (prevRound.length === currentRound.length * 2) {
     // For larger brackets, offset to align with middle matches
@@ -207,15 +213,31 @@ function calculateDynamicRoundOffset(roundIndex: number): number {
 
     const junctionPosition = (match1Center + match2Center) / 2;
 
-    // Align current round's first match player 1 position with junction
-    return junctionPosition - 1.5;
+    if (hasMarkers) {
+      // Rounds WITH markers: align player 1 position with junction
+      return junctionPosition - 1.5;
+    } else {
+      // Rounds WITHOUT markers: center the match with junction
+      return junctionPosition - matchHeight / 2;
+    }
   } else {
-    // Direct 1-to-1 connection - align this round's player 1 position with previous round's match center
+    // Direct 1-to-1 connection
     // Previous round's first match center is at prevRoundOffset + matchHeight/2
-    // This round's player 1 is at offset + 1.5
-    // So: offset + 1.5 = prevRoundOffset + matchHeight/2
-    // offset = prevRoundOffset + 3 - 1.5 = prevRoundOffset + 1.5
-    return prevRoundOffset + 1.5;
+    const prevMatchCenter = prevRoundOffset + matchHeight / 2;
+
+    if (hasMarkers) {
+      // Rounds WITH markers: align player 1 position (1.5rem from top) with previous match center
+      // This round's player 1 is at offset + 1.5
+      // So: offset + 1.5 = prevMatchCenter
+      // offset = prevMatchCenter - 1.5
+      return prevMatchCenter - 1.5;
+    } else {
+      // Rounds WITHOUT markers: center the match with previous match center
+      // This round's match center is at offset + matchHeight/2 (offset + 3)
+      // So: offset + 3 = prevMatchCenter
+      // offset = prevMatchCenter - 3
+      return prevMatchCenter - matchHeight / 2;
+    }
   }
 }
 
