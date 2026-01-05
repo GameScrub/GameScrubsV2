@@ -148,7 +148,7 @@
                     : 'text-gray-700 dark:text-gray-400'
                 "
               >
-                {{ isSignalRConnected ? 'Live' : 'Offline' }}
+                {{ isSignalRConnected ? 'Connected' : 'Offline' }}
               </span>
             </div>
             <!-- Tooltip -->

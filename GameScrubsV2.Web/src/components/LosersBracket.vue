@@ -26,7 +26,12 @@
       <!-- Rounds with Matches -->
       <div class="rounds">
         <template v-for="(round, roundIndex) in rounds" :key="`losers-${roundIndex}`">
-          <div class="round" :data-round="roundIndex + 1" :style="getRoundOffset(roundIndex)">
+          <div
+            class="round"
+            :class="{ 'has-junction': roundsWithJunctions.has(roundIndex + 1) }"
+            :data-round="roundIndex + 1"
+            :style="getRoundOffset(roundIndex)"
+          >
             <div class="matches">
               <template v-for="(match, _) in round" :key="match.id">
                 <div class="match-wrapper">
@@ -72,6 +77,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import BracketMatch from '@/components/BracketMatch.vue';
 import type { BracketPlacement } from '@/models/BracketPlacement';
 import { IconTrophyFilled } from '@tabler/icons-vue';
@@ -97,6 +103,22 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const matchHeight = 6; // rem - half of match height is 3rem
+
+// Compute which rounds have junction connectors (2-to-1 pattern)
+const roundsWithJunctions = computed(() => {
+  const junctionRounds = new Set<number>();
+
+  for (let i = 0; i < props.rounds.length - 1; i++) {
+    const currentRound = props.rounds[i];
+    const nextRound = props.rounds[i + 1];
+
+    if (currentRound && nextRound && currentRound.length === nextRound.length * 2) {
+      junctionRounds.add(i + 1); // data-round is 1-indexed, so round index + 1
+    }
+  }
+
+  return junctionRounds;
+});
 
 // Helper function to get position marker for a match
 function getPositionMarker(match: MatchWithData): number | undefined {
@@ -400,40 +422,14 @@ function getChampionSpaceStyle() {
   background: #dc2626;
 }
 
-/* Round 2: Shorten horizontal connectors (2-to-1 pattern with junction) */
-.round[data-round='2'] .matches :deep(.match::after) {
-  width: 2rem;
-  right: -2rem;
-}
-
-/* For any other round with junction connectors, shorten the horizontal connectors */
-/* This uses :has(+ .connector-space .horizontal-connector) to check ONLY the immediate next connector-space */
-.round[data-round='3']:has(+ .connector-space .horizontal-connector) .matches :deep(.match::after),
-.round[data-round='4']:has(+ .connector-space .horizontal-connector) .matches :deep(.match::after),
-.round[data-round='5']:has(+ .connector-space .horizontal-connector) .matches :deep(.match::after),
-.round[data-round='6']:has(+ .connector-space .horizontal-connector) .matches :deep(.match::after) {
+/* Shorten horizontal connectors for rounds with junction connectors (2-to-1 pattern) */
+.round.has-junction .matches :deep(.match::after) {
   width: 2rem;
   right: -2rem;
 }
 
 /* Vertical connectors for rounds with 2-to-1 pattern */
-/* Only add vertical connectors if the immediate next connector-space has junction connectors */
-.round[data-round='3']:has(+ .connector-space .horizontal-connector)
-  .matches
-  .match-wrapper:nth-child(odd)
-  :deep(.match::before),
-.round[data-round='4']:has(+ .connector-space .horizontal-connector)
-  .matches
-  .match-wrapper:nth-child(odd)
-  :deep(.match::before),
-.round[data-round='5']:has(+ .connector-space .horizontal-connector)
-  .matches
-  .match-wrapper:nth-child(odd)
-  :deep(.match::before),
-.round[data-round='6']:has(+ .connector-space .horizontal-connector)
-  .matches
-  .match-wrapper:nth-child(odd)
-  :deep(.match::before) {
+.round.has-junction .matches .match-wrapper:nth-child(odd) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
@@ -443,22 +439,7 @@ function getChampionSpaceStyle() {
   background: #dc2626;
 }
 
-.round[data-round='3']:has(+ .connector-space .horizontal-connector)
-  .matches
-  .match-wrapper:nth-child(even)
-  :deep(.match::before),
-.round[data-round='4']:has(+ .connector-space .horizontal-connector)
-  .matches
-  .match-wrapper:nth-child(even)
-  :deep(.match::before),
-.round[data-round='5']:has(+ .connector-space .horizontal-connector)
-  .matches
-  .match-wrapper:nth-child(even)
-  :deep(.match::before),
-.round[data-round='6']:has(+ .connector-space .horizontal-connector)
-  .matches
-  .match-wrapper:nth-child(even)
-  :deep(.match::before) {
+.round.has-junction .matches .match-wrapper:nth-child(even) :deep(.match::before) {
   content: '';
   position: absolute;
   right: -2rem;
