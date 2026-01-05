@@ -12,7 +12,7 @@ public static partial class BracketEndpoints
 {
 	public static void UpdateBracket(this RouteGroupBuilder group) =>
 		group.MapPut("/{lockcode?}", async (
-				[FromRoute] string? lockCode,
+				[FromRoute] int? lockCode,
 				[FromBody] UpdateBracketRequest request,
 				[FromServices] BracketRepository bracketRepository,
 				TimeProvider timeProvider,
@@ -45,13 +45,11 @@ public static partial class BracketEndpoints
 					}
 
 					bracket.Name = request.Name;
-					bracket.Url = request.Url;
-					bracket.IsLocked = !string.IsNullOrEmpty(request.LockCode);
+					bracket.IsLocked = request.LockCode != null;
 					bracket.LockCode = request.LockCode;
 					bracket.Type = request.Type;
 					bracket.Competition = request.Competition;
 					bracket.Game = request.Game;
-					bracket.Email = request.Email;
 					bracket.StartDate = startDate;
 
 					await bracketRepository.UpdateAsync(bracket, cancellationToken);
@@ -82,13 +80,8 @@ public static partial class BracketEndpoints
 		[MinLength(5)]
 		public required string Game { get; init; }
 
-		[EmailAddress]
-		public string? Email { get; init; }
-
-		[Url]
-		public string? Url { get; init; }
-
-		public string? LockCode { get; init; }
+		[Range(0, 99999)]
+		public int? LockCode { get; init; }
 
 		public required BracketType Type { get; init; }
 		public required CompetitionType Competition { get; init; }
@@ -100,7 +93,6 @@ public static partial class BracketEndpoints
 		public required int Id { get; init; }
 		public required string? Name { get; init; }
 		public required string? Game { get; init; }
-		public required string? Url { get; init; }
 		public required bool IsLocked { get; init; }
 		public required BracketType Type { get; init; }
 		public required CompetitionType Competition { get; init; }
@@ -112,7 +104,6 @@ public static partial class BracketEndpoints
 			Id = data.Id,
 			Name = data.Name,
 			Game = data.Game,
-			Url = data.Url,
 			IsLocked = data.IsLocked,
 			Type = data.Type,
 			Competition = data.Competition,

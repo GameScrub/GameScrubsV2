@@ -12,7 +12,7 @@ public static partial class PlayerEndpoints
 {
 	public static void RemovePlayer(this RouteGroupBuilder group) =>
 		group.MapDelete("/{lockcode?}", async (
-				[FromRoute] string? lockCode,
+				[FromRoute] int? lockCode,
 				[FromBody] RemovePlayersRequest request,
 				[FromServices] BracketRepository bracketRepository,
 				GameScrubsV2DbContext dbContext,

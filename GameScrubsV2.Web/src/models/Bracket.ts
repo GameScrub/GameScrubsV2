@@ -6,7 +6,6 @@ export interface Bracket {
   id: number;
   name: string;
   game: string;
-  url: string | null;
   isLocked: boolean;
   type: BracketType;
   status: BracketStatus;

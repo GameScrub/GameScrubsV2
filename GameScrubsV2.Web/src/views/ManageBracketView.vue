@@ -9,7 +9,7 @@
       <Header
         ref="headerRef"
         :sidebarOpen="sidebarOpen"
-        :variant="HeaderVariant.Bracket"
+        :variant="HeaderVariant.ManageBracket"
         :bracket-name="isEditMode ? 'Edit Bracket' : 'Create Bracket'"
         :bracket-id="isEditMode ? parseInt(route.params.id as string) : undefined"
         :is-locked="bracket?.isLocked"
@@ -181,42 +181,6 @@
                 />
               </div>
 
-              <!-- Email (Optional) -->
-              <div class="mb-6">
-                <label
-                  for="email"
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Email
-                </label>
-                <input
-                  id="email"
-                  v-model="formData.email"
-                  type="email"
-                  :disabled="isFormDisabled"
-                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                  placeholder="your@email.com"
-                />
-              </div>
-
-              <!-- URL (Optional) -->
-              <div class="mb-6">
-                <label
-                  for="url"
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  URL
-                </label>
-                <input
-                  id="url"
-                  v-model="formData.url"
-                  type="url"
-                  :disabled="isFormDisabled"
-                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                  placeholder="https://example.com"
-                />
-              </div>
-
               <!-- Lock Code (Optional) -->
               <div class="mb-6">
                 <label
@@ -229,12 +193,17 @@
                   id="lockCode"
                   v-model="formData.lockCode"
                   type="text"
+                  pattern="[0-9]*"
+                  inputmode="numeric"
+                  maxlength="5"
+                  autocomplete="off"
                   :disabled="isFormDisabled"
+                  @input="handleLockCodeInput"
                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                  placeholder="Optional lock code to protect bracket"
+                  placeholder="5-digit numeric code (optional)"
                 />
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  If set, this code will be required to edit the bracket later
+                  If set, this code will be required to edit the bracket later. Numbers only, max 5 digits.
                 </p>
               </div>
 
@@ -343,8 +312,6 @@ interface BracketFormData {
   type: BracketType | '';
   competition: Competition | '';
   startDate: string;
-  email: string;
-  url: string;
   lockCode: string;
 }
 
@@ -354,8 +321,6 @@ const formData: Ref<BracketFormData> = ref({
   type: '',
   competition: '',
   startDate: '',
-  email: '',
-  url: '',
   lockCode: '',
 });
 
@@ -374,9 +339,9 @@ const bracketTypes = [
 ];
 
 const competitionTypes = [
-  { value: Competition.VideoGames, label: 'Video Games' },
-  { value: Competition.Sports, label: 'Sports' },
-  { value: Competition.Esports, label: 'Esports' },
+  { value: Competition.VideoGames, label: 'Video Game' },
+  { value: Competition.Sports, label: 'Sport' },
+  { value: Competition.BoardGames, label: 'Board Game' },
   { value: Competition.Other, label: 'Other' },
 ];
 
@@ -436,8 +401,6 @@ async function loadBracket() {
       type: bracketData.type,
       competition: bracketData.competition,
       startDate: bracketData.startDate?.split('T')[0] || '',
-      email: '',
-      url: bracketData.url || '',
       lockCode: '',
     };
   } catch (err) {
@@ -479,8 +442,6 @@ async function createBracket() {
     type: formData.value.type,
     competition: formData.value.competition,
     startDate: formData.value.startDate,
-    email: formData.value.email || undefined,
-    url: formData.value.url || undefined,
     lockCode: formData.value.lockCode || undefined,
   };
 
@@ -506,8 +467,6 @@ async function updateBracket() {
     type: formData.value.type,
     competition: formData.value.competition,
     startDate: formData.value.startDate,
-    email: formData.value.email || undefined,
-    url: formData.value.url || undefined,
     lockCode: formData.value.lockCode || undefined,
   };
 
@@ -585,5 +544,13 @@ function confirmLeaveWithoutSaving() {
 function cancelLeave() {
   showUnsavedChangesConfirm.value = false;
   pendingNavigation.value = null;
+}
+
+function handleLockCodeInput(event: Event) {
+  const input = event.target as HTMLInputElement;
+  // Remove any non-numeric characters
+  const numericValue = input.value.replace(/\D/g, '');
+  // Limit to 5 digits
+  formData.value.lockCode = numericValue.slice(0, 5);
 }
 </script>

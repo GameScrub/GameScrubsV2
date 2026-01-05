@@ -121,7 +121,7 @@
           <ThemeToggle />
 
           <!-- Live Indicator -->
-          <div v-if="bracketId && isSignalRConnected !== undefined" class="relative group">
+          <div v-if="bracketId && isSignalRConnected !== undefined && variant === HeaderVariant.Bracket" class="relative group">
             <div
               class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all"
               :class="

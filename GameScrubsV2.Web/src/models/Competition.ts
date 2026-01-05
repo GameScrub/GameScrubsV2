@@ -1,6 +1,6 @@
 export enum Competition {
   VideoGames = 'VideoGames',
   Sports = 'Sports',
-  Esports = 'Esports',
+  BoardGames = 'BoardGames',
   Other = 'Other',
 }

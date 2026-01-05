@@ -34,14 +34,12 @@ public static partial class BracketEndpoints
 					var bracket = new Models.Bracket
 					{
 						Name = request.Name,
-						Url = request.Url,
-						IsLocked = !string.IsNullOrEmpty(request.LockCode),
+						IsLocked = request.LockCode != null,
 						LockCode = request.LockCode,
 						Type = request.Type,
 						Competition = request.Competition,
 						Status = BracketStatus.Setup,
 						Game = request.Game,
-						Email = request.Email,
 						StartDate = startDate,
 						CreatedDate = timeProvider.GetUtcNow().DateTime
 					};
@@ -72,13 +70,8 @@ public static partial class BracketEndpoints
 		[MinLength(5)]
 		public required string Game { get; init; }
 
-		[EmailAddress]
-		public string? Email { get; init; }
-
-		[Url]
-		public string? Url { get; init; }
-
-		public string? LockCode { get; init; }
+		[Range(0, 99999)]
+		public int? LockCode { get; init; }
 		public required BracketType Type { get; init; }
 		public required CompetitionType Competition { get; init; }
 		public required DateOnly StartDate { get; init; }
@@ -89,7 +82,6 @@ public static partial class BracketEndpoints
 		public required int Id { get; init; }
 		public required string? Name { get; init; }
 		public required string? Game { get; init; }
-		public required string? Url { get; init; }
 		public required bool IsLocked { get; init; }
 		public required BracketType Type { get; init; }
 		public required BracketStatus Status { get; init; }
@@ -102,7 +94,6 @@ public static partial class BracketEndpoints
 			Id = data.Id,
 			Name = data.Name,
 			Game = data.Game,
-			Url = data.Url,
 			IsLocked = data.IsLocked,
 			Type = data.Type,
 			Status = data.Status,

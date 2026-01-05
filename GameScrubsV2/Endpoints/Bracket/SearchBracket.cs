@@ -123,7 +123,6 @@ public static partial class BracketEndpoints
 		public required int Id { get; init; }
 		public required string? Name { get; init; }
 		public required string? Game { get; init; }
-		public required string? Url { get; init; }
 		public required bool IsLocked { get; init; }
 		public required BracketType Type { get; init; }
 		public required BracketStatus Status { get; init; }
@@ -136,7 +135,6 @@ public static partial class BracketEndpoints
 			Id = data.Id,
 			Name = data.Name,
 			Game = data.Game,
-			Url = data.Url,
 			IsLocked = data.IsLocked,
 			Type = data.Type,
 			Status = data.Status,

@@ -52,6 +52,6 @@ public static partial class BracketEndpoints
 		[Required]
 		public required int Id { get; init; }
 
-		public string? LockCode { get; init; }
+		public int? LockCode { get; init; }
 	}
 }

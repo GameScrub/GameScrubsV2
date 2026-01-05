@@ -11,7 +11,7 @@ public static partial class PlayerEndpoints
 {
 	public static void ReorderPlayers(this RouteGroupBuilder group) =>
 		group.MapPost("/reorder/{lockcode?}", async (
-				[FromRoute] string? lockCode,
+				[FromRoute] int? lockCode,
 				[FromBody] ReorderPlayersRequest request,
 				[FromServices] BracketRepository bracketRepository,
 				GameScrubsV2DbContext dbContext,

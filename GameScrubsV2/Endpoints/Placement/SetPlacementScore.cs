@@ -19,7 +19,7 @@ public static partial class PlacementEndpoints
 		group.MapPost("/score/{placementId:int}/{lockCode?}", async (
 				[FromRoute] int bracketId,
 				[FromRoute] int placementId,
-				[FromRoute] string? lockCode,
+				[FromRoute] int? lockCode,
 				[FromServices] GameScrubsV2DbContext dbContext,
 				[FromServices] IBracketHubService bracketHubService,
 				BracketRepository bracketRepository,
@@ -186,7 +186,7 @@ public static partial class PlacementEndpoints
 				dbContext.Placements.Add(new Models.Placement
 				{
 					BracketId = bracket.Id,
-					PlayerName = loser.PlayerName,
+					PlayerName = loser!.PlayerName,
 					BracketPlace = position.LoseLocation,
 					Score = loserScore.Score,
 					Status = PlacementStatus.Default,

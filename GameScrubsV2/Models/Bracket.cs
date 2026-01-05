@@ -10,11 +10,7 @@ public sealed class Bracket
 
 	public string? Game { get; set; }
 
-	public string? Url { get; set; }
-
-	public string? Email { get; set; }
-
-	public string? LockCode { get; set; }
+	public int? LockCode { get; set; }
 
 	public bool IsLocked { get; set; }
 

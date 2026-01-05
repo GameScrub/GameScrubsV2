@@ -114,17 +114,30 @@
               <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
                 Player Seeding (Drag to Reorder)
               </h2>
-              <button
-                v-if="displayPlayers.length > 0"
-                type="button"
-                @click="handleRandomize"
-                :disabled="isSubmitting || isFormDisabled"
-                class="flex items-center gap-2 px-3 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                title="Randomize player order"
-              >
-                <IconReload :size="16" :stroke-width="2" />
-                Randomize
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  v-if="displayPlayers.length > 0 && hasByes"
+                  type="button"
+                  @click="handleDistributeByes"
+                  :disabled="isSubmitting || isFormDisabled"
+                  class="flex items-center gap-2 px-3 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  title="Distribute byes evenly throughout the bracket"
+                >
+                  <IconReload :size="16" :stroke-width="2" />
+                  Distribute Byes
+                </button>
+                <button
+                  v-if="displayPlayers.length > 0"
+                  type="button"
+                  @click="handleRandomize"
+                  :disabled="isSubmitting || isFormDisabled"
+                  class="flex items-center gap-2 px-3 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  title="Randomize player order"
+                >
+                  <IconReload :size="16" :stroke-width="2" />
+                  Randomize
+                </button>
+              </div>
             </div>
 
             <div
@@ -372,6 +385,10 @@ const hasChanges = computed(() => {
   return JSON.stringify(currentOrder) !== JSON.stringify(originalPlayerOrder.value);
 });
 
+const hasByes = computed(() => {
+  return displayPlayers.value.some((p) => p.id === 0);
+});
+
 const isFormDisabled = computed(() => {
   return bracket.value?.status !== BracketStatus.Setup;
 });
@@ -436,6 +453,16 @@ async function handleAddPlayer() {
   try {
     if (players.value.length >= maxPlayers.value) {
       throw new Error('Bracket is full');
+    }
+
+    // Save current order if there are unsaved changes
+    if (hasChanges.value) {
+      const playerIds = displayPlayers.value.map((p) => p.id);
+      await playerService.reorder(
+        bracket.value.id,
+        playerIds,
+        bracketStore.getLockCode(bracket.value.id),
+      );
     }
 
     await playerService.add(
@@ -562,6 +589,67 @@ async function handleRandomize() {
   window.scrollTo(scrollX, scrollY);
 
   notification?.success('Player order randomized!');
+}
+
+async function handleDistributeByes() {
+  // Save current scroll position
+  const scrollY = window.scrollY;
+  const scrollX = window.scrollX;
+
+  // Save current player order BEFORE clearing
+  const currentSnapshot = displayPlayers.value.map((p) => ({ ...p }));
+
+  // Clear the array first to prevent any reactivity issues
+  displayPlayers.value = [];
+
+  // Wait for Vue to process the clear
+  await nextTick();
+
+  // Separate real players (maintaining current order) and byes
+  const realPlayers = currentSnapshot.filter((p) => p.id !== 0);
+  const byes = currentSnapshot.filter((p) => p.id === 0);
+
+  // If there are no byes or no real players, just use the current order
+  if (byes.length === 0 || realPlayers.length === 0) {
+    displayPlayers.value = currentSnapshot;
+    return;
+  }
+
+  // Distribute players and byes evenly
+  const distributed: Player[] = [];
+  const totalSlots = realPlayers.length + byes.length;
+
+  let playerIndex = 0;
+  let byeIndex = 0;
+
+  for (let i = 0; i < totalSlots; i++) {
+    // Determine if this slot should be a bye based on even distribution
+    const shouldBeBye = byeIndex < byes.length &&
+                        Math.floor((i + 1) * byes.length / totalSlots) > byeIndex;
+
+    if (shouldBeBye && byeIndex < byes.length) {
+      const bye = byes[byeIndex];
+      if (bye) {
+        distributed.push(bye);
+      }
+      byeIndex++;
+    } else if (playerIndex < realPlayers.length) {
+      const player = realPlayers[playerIndex];
+      if (player) {
+        distributed.push(player);
+      }
+      playerIndex++;
+    }
+  }
+
+  // Set the distributed array
+  displayPlayers.value = distributed;
+
+  // Restore scroll position
+  await nextTick();
+  window.scrollTo(scrollX, scrollY);
+
+  notification?.success('Byes distributed evenly throughout the bracket!');
 }
 
 function handleRevertToSetup() {

@@ -13,7 +13,7 @@ public static partial class PlayerEndpoints
 {
 	public static void AddPlayer(this RouteGroupBuilder group) =>
 		group.MapPost("/{lockcode?}", async (
-				[FromRoute] string? lockCode,
+				[FromRoute] int? lockCode,
 				[FromBody] AddPlayerRequest request,
 				[FromServices] BracketRepository bracketRepository,
 				GameScrubsV2DbContext dbContext,
