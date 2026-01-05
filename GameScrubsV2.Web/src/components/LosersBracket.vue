@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-unused-vars -->
 <template>
   <div class="losers-bracket" v-if="rounds.length">
     <div class="sm:flex sm:justify-between sm:items-center mb-8">
@@ -27,7 +28,7 @@
         <template v-for="(round, roundIndex) in rounds" :key="`losers-${roundIndex}`">
           <div class="round" :data-round="roundIndex + 1" :style="getRoundOffset(roundIndex)">
             <div class="matches">
-              <template v-for="(match, matchIndex) in round" :key="match.id">
+              <template v-for="(match, _) in round" :key="match.id">
                 <div class="match-wrapper">
                   <BracketMatch
                     :player1="match.player1Data"
@@ -55,7 +56,11 @@
         </template>
 
         <!-- Champion connector after last round -->
-        <div v-if="isDoubleElimination && rounds.length > 0" class="champion-space" :style="getChampionSpaceStyle()">
+        <div
+          v-if="isDoubleElimination && rounds.length > 0"
+          class="champion-space"
+          :style="getChampionSpaceStyle()"
+        >
           <div class="champion-connector"></div>
           <div class="champion-marker">
             <IconTrophyFilled class="trophy-icon" />
@@ -100,7 +105,11 @@ function getPositionMarker(match: MatchWithData): number | undefined {
   // If markerPosition is -1, show trophy icon (handled separately in template)
   // If markerPosition is null or undefined, show no marker
   // Otherwise, show the marker number
-  if (match.markerPosition === null || match.markerPosition === undefined || match.markerPosition === -1) {
+  if (
+    match.markerPosition === null ||
+    match.markerPosition === undefined ||
+    match.markerPosition === -1
+  ) {
     return undefined;
   }
 
@@ -174,9 +183,8 @@ function calculateDynamicRoundOffset(roundIndex: number): number {
   const prevMatchGap = getMatchGap(prevRoundIndex); // Use dynamic gap calculation
 
   // Check if current round has any position markers
-  const hasMarkers = currentRound.some(match =>
-    match.markerPosition !== null &&
-    match.markerPosition !== undefined
+  const hasMarkers = currentRound.some(
+    (match) => match.markerPosition !== null && match.markerPosition !== undefined,
   );
 
   // Check if it's a 2-to-1 pattern (junction connector)
@@ -298,7 +306,6 @@ function getChampionSpaceStyle() {
     '--round-offset': `${lastRoundOffset}rem`,
   };
 }
-
 </script>
 
 <style scoped>

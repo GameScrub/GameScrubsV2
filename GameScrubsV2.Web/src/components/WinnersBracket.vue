@@ -51,7 +51,9 @@
                     :show-scores="false"
                     :bracket-status="bracketStatus"
                     :position-marker="getPositionMarker(match)"
-                    :marker-icon="showTrophyIcon(match, roundIndex, matchIndex) ? IconTrophyFilled : undefined"
+                    :marker-icon="
+                      showTrophyIcon(match, roundIndex, matchIndex) ? IconTrophyFilled : undefined
+                    "
                     :is-winners-bracket="true"
                   />
                 </div>
@@ -125,7 +127,11 @@ function getPositionMarker(match: MatchWithData): number | undefined {
   // If markerPosition is -1, show trophy icon (handled separately in template)
   // If markerPosition is null or undefined, show no marker
   // Otherwise, show the marker number
-  if (match.markerPosition === null || match.markerPosition === undefined || match.markerPosition === -1) {
+  if (
+    match.markerPosition === null ||
+    match.markerPosition === undefined ||
+    match.markerPosition === -1
+  ) {
     return undefined;
   }
 
@@ -271,7 +277,8 @@ function getBracketMatchOffset(roundIndex: number) {
     // - Align to player 1 position (25% from top of finals match)
     const verticalConnectorLength = 4;
     const paddingTop = 0;
-    offset = semiFinalsConnectorPosition + verticalConnectorLength - matchHeight * 0.25 + paddingTop;
+    offset =
+      semiFinalsConnectorPosition + verticalConnectorLength - matchHeight * 0.25 + paddingTop;
   }
 
   return {
@@ -291,7 +298,8 @@ function getConnectorOffset(roundIndex: number): number {
     const semiFinalsConnectorPosition = semiFinalsOffset + matchHeight / 2;
     const verticalConnectorLength = 4;
     const paddingTop = 0;
-    offset = semiFinalsConnectorPosition + verticalConnectorLength - matchHeight * 0.25 + paddingTop;
+    offset =
+      semiFinalsConnectorPosition + verticalConnectorLength - matchHeight * 0.25 + paddingTop;
   }
 
   return offset;
@@ -320,7 +328,6 @@ function getChampionOffset() {
     '--round-offset': `${offset}rem`,
   };
 }
-
 </script>
 
 <style scoped>

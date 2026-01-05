@@ -63,11 +63,11 @@
         <div class="mb-6 flex items-center gap-4">
           <button
             @click="setWinner(player1)"
-            class="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center group"
+            class="flex-1 px-6 py-4 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center group"
           >
             <span class="truncate">{{ player1.playerName }}</span>
             <svg
-              class="w-6 h-6 ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+              class="w-6 h-6 ml-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -82,15 +82,15 @@
           </button>
 
           <!-- VS Icon/Text -->
-          <div class="flex-shrink-0 text-gray-400 dark:text-gray-500 font-bold text-xl">VS</div>
+          <div class="shrink-0 text-gray-400 dark:text-gray-500 font-bold text-xl">VS</div>
 
           <button
             @click="setWinner(player2)"
-            class="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center group"
+            class="flex-1 px-6 py-4 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center group"
           >
             <span class="truncate">{{ player2.playerName }}</span>
             <svg
-              class="w-6 h-6 ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+              class="w-6 h-6 ml-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

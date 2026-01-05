@@ -6,9 +6,6 @@ import vueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vite.dev/config/
 export default defineConfig({
-  define: {
-    'process.env': process.env,
-  },
   plugins: [vue(), vueDevTools()],
   server: {
     port: 5176, // or whatever port you want
