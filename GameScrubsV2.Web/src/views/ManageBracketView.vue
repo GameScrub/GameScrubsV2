@@ -1,7 +1,11 @@
 <template>
   <div class="flex h-screen overflow-hidden">
     <!-- Sidebar -->
-    <Sidebar :sidebarOpen="sidebarOpen" @close-sidebar="sidebarOpen = false" :variant="SidebarVariant.V2" />
+    <Sidebar
+      :sidebarOpen="sidebarOpen"
+      @close-sidebar="sidebarOpen = false"
+      :variant="SidebarVariant.V2"
+    />
 
     <!-- Content area -->
     <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
@@ -35,7 +39,7 @@
               <button
                 @click.stop="handleRevertToSetup"
                 :disabled="isReverting"
-                class="flex-shrink-0 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                class="shrink-0 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {{ isReverting ? 'Reverting...' : 'Revert to Setup' }}
               </button>
@@ -203,7 +207,8 @@
                   placeholder="5-digit numeric code (optional)"
                 />
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  If set, this code will be required to edit the bracket later. Numbers only, max 5 digits.
+                  If set, this code will be required to edit the bracket later. Numbers only, max 5
+                  digits.
                 </p>
               </div>
 

@@ -1,0 +1,23 @@
+{
+  "name": "GameScrubs - Tournament Bracket Generator",
+  "short_name": "GameScrubs",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#1f2937",
+  "background_color": "#111827",
+  "display": "standalone",
+  "start_url": "/",
+  "description": "Create and manage gaming tournament brackets with real-time updates"
+}
