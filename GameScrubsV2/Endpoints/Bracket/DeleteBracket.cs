@@ -45,6 +45,7 @@ public static partial class BracketEndpoints
 				}
 			})
 			.WithName("DeleteBracket")
+			.RequireRateLimiting("BracketUpdates")
 			.AllowAnonymous();
 
 	public sealed record DeleteBracketRequest

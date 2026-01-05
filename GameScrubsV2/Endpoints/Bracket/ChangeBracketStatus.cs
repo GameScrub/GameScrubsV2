@@ -120,6 +120,7 @@ public static partial class BracketEndpoints
 				}
 			})
 			.WithName("ChangeBracketStatus")
+			.RequireRateLimiting("BracketUpdates")
 			.AllowAnonymous();
 
 	private static async Task<Dictionary<string, int>> GetStartPositions(

@@ -56,6 +56,7 @@ public static partial class BracketEndpoints
 				}
 			})
 			.WithName("CreateBracket")
+			.RequireRateLimiting("CreateBracket")
 			.AllowAnonymous();
 
 	public sealed record CreateBracketRequest

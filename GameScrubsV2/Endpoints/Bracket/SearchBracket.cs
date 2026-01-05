@@ -83,6 +83,7 @@ public static partial class BracketEndpoints
 
 				return Results.Ok(response);
 			}).WithName("SearchBracket")
+			.RequireRateLimiting("SearchOperations")
 			.AllowAnonymous();
 
 	public sealed record GetAllBracketsRequest

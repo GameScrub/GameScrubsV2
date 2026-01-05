@@ -73,6 +73,7 @@ public static partial class PlayerEndpoints
 			return Results.NoContent();
 		})
 		.WithName("ReorderPlayers")
+		.RequireRateLimiting("PlayerOperations")
 		.AllowAnonymous();
 
 	public sealed record ReorderPlayersRequest

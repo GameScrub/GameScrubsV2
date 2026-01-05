@@ -20,6 +20,7 @@ public static partial class BracketEndpoints
 					: Results.Ok(GetBracketByIdResponse.ToResponseModel(bracket));
 			})
 			.WithName("GetBracketById")
+			.RequireRateLimiting("SearchOperations")
 			.AllowAnonymous();
 
 	public sealed record GetBracketByIdResponse

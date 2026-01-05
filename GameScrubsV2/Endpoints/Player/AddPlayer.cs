@@ -89,6 +89,7 @@ public static partial class PlayerEndpoints
 			return Results.NoContent();
 		})
 		.WithName("AddPlayer")
+		.RequireRateLimiting("PlayerOperations")
 		.AllowAnonymous();
 
 	public sealed record AddPlayerRequest

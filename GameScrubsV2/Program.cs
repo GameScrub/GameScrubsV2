@@ -7,10 +7,12 @@ using GameScrubsV2.Hubs;
 using GameScrubsV2.Models;
 using GameScrubsV2.Repositories;
 using GameScrubsV2.Services;
+using GameScrubsV2.Setup;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -84,6 +86,9 @@ builder.Services.AddAuthentication(options =>
 	});
 
 builder.Services.AddAuthorization();
+
+// Add Rate Limiting
+builder.ConfigureRateLimiting();
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -160,6 +165,8 @@ app.UseSerilogRequestLogging(options =>
 app.UseCors("AllowVueApp");
 app.UseHttpsRedirection();
 
+app.UseRateLimiter();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -167,3 +174,4 @@ app.MapHub<BracketHub>("/hubs/bracket");
 app.MapEndpoints();
 
 app.Run();
+

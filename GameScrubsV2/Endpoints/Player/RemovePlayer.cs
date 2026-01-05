@@ -55,6 +55,7 @@ public static partial class PlayerEndpoints
 			return Results.NoContent();
 		})
 		.WithName("RemovePlayer")
+		.RequireRateLimiting("PlayerOperations")
 		.AllowAnonymous();
 
 	public sealed record RemovePlayersRequest

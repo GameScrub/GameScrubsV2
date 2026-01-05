@@ -63,6 +63,7 @@ public static partial class BracketEndpoints
 				}
 			})
 			.WithName("UpdateBracket")
+			.RequireRateLimiting("BracketUpdates")
 			.AllowAnonymous();
 
 	public sealed record UpdateBracketRequest
