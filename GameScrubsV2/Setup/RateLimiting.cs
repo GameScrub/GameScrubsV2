@@ -46,6 +46,7 @@ public static class RateLimiting
 						 Window = TimeSpan.FromMinutes(1),
 						 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
 						 QueueLimit = 0
+
 					 }));
 
 			 // Policy for bracket updates (prevents excessive status changes)
