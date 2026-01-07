@@ -7,6 +7,7 @@ public static class Configuration
 		public WebApplicationBuilder RegisterConfigurations()
 		{
 			builder.InitializeSettings<TokenSettings>(TokenSettings.Key);
+			builder.InitializeSettings<RateLimitingSettings>(RateLimitingSettings.Key);
 
 			return builder;
 		}

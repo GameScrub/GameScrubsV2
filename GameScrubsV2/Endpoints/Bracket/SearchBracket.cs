@@ -25,39 +25,13 @@ public static partial class BracketEndpoints
 					return Results.NotFound(new MessageResponse("No brackets found"));
 				}
 
-				var query = data.AsQueryable();
-
-				if (!string.IsNullOrWhiteSpace(request?.Name))
-				{
-					var nameLower = request.Name.ToLower();
-					query = query.Where(bracket => bracket.Name != null && bracket.Name.ToLower().Contains(nameLower));
-				}
-
-				if (!string.IsNullOrWhiteSpace(request?.Game))
-				{
-					var gameLower = request.Game.ToLower();
-					query = query.Where(bracket => bracket.Game != null && bracket.Game.ToLower().Contains(gameLower));
-				}
-
-				if (request?.Status is not null)
-				{
-					query = query.Where(bracket => bracket.Status == request.Status);
-				}
-
-				if (request?.Type is not null)
-				{
-					query = query.Where(bracket => bracket.Type == request.Type);
-				}
-
-				if (request?.Competition is not null)
-				{
-					query = query.Where(bracket => bracket.Competition == request.Competition);
-				}
-
-				if (request?.IsLocked is not null)
-				{
-					query = query.Where(bracket => bracket.IsLocked == request.IsLocked);
-				}
+				var query = data.AsQueryable()
+					.WhereIf(!string.IsNullOrWhiteSpace(request?.Name), bracket => bracket.Name != null && bracket.Name.ToLower().Contains(request!.Name!.ToLower()))
+					.WhereIf(!string.IsNullOrWhiteSpace(request?.Game), bracket => bracket.Game != null && bracket.Game.ToLower().Contains(request!.Game!.ToLower()))
+					.WhereIf(request?.Status is not null, bracket => bracket.Status == request!.Status)
+					.WhereIf(request?.Type is not null, bracket => bracket.Type == request!.Type)
+					.WhereIf(request?.Competition is not null, bracket => bracket.Competition == request!.Competition)
+					.WhereIf(request?.IsLocked is not null, bracket => bracket.IsLocked == request!.IsLocked);
 
 				var pagination = request?.GetPagination() ?? Pagination.Empty;
 
@@ -66,7 +40,6 @@ public static partial class BracketEndpoints
 
 				var paginatedBrackets = orderedQuery
 				   .Paginate(pagination)
-				   .ToList()
 				   .Select(BracketResponse.ToResponseModel)
 				   .ToList();
 
