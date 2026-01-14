@@ -10,7 +10,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Bracket;
 
 public class GetBracketPositionsTests : IntegrationTestBase
 {
-    public GetBracketPositionsTests(IntegrationTestFactory factory) : base(factory) { }
+    public GetBracketPositionsTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task GetBracketPositions_WithExistingBracket_ReturnsPositions()

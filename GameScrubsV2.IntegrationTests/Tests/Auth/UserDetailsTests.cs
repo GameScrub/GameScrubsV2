@@ -9,7 +9,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Auth;
 
 public class UserDetailsTests : IntegrationTestBase
 {
-    public UserDetailsTests(IntegrationTestFactory factory) : base(factory) { }
+    public UserDetailsTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task UserDetails_WithValidToken_ReturnsUserInfo()

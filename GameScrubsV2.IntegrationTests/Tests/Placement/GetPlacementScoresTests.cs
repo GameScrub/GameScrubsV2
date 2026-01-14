@@ -10,7 +10,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Placement;
 
 public class GetPlacementScoresTests : IntegrationTestBase
 {
-    public GetPlacementScoresTests(IntegrationTestFactory factory) : base(factory) { }
+    public GetPlacementScoresTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task GetPlacementScores_WithExistingBracket_ReturnsScores()

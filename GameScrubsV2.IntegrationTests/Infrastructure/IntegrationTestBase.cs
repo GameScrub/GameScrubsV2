@@ -9,15 +9,28 @@ using static GameScrubsV2.Common.Json.SerializerOptions;
 
 namespace GameScrubsV2.IntegrationTests.Infrastructure;
 
-public abstract class IntegrationTestBase : IClassFixture<IntegrationTestFactory>
+[Collection("Database")]
+public abstract class IntegrationTestBase : IAsyncLifetime
 {
     protected readonly HttpClient HttpClient;
     protected readonly IntegrationTestFactory Factory;
 
-    protected IntegrationTestBase(IntegrationTestFactory factory)
+    protected IntegrationTestBase(DatabaseFixture databaseFixture)
     {
-        Factory = factory;
-        HttpClient = factory.CreateClient();
+        Factory = new IntegrationTestFactory(databaseFixture);
+        HttpClient = Factory.CreateClient();
+    }
+
+    public async Task InitializeAsync()
+    {
+        await Factory.EnsureDatabaseCreatedAsync();
+    }
+
+    public virtual Task DisposeAsync()
+    {
+        HttpClient?.Dispose();
+        Factory?.Dispose();
+        return Task.CompletedTask;
     }
 
     protected Task<GameScrubsV2DbContext> GetDbContext()

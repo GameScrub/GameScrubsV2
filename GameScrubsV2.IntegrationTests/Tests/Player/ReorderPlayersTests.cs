@@ -10,7 +10,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Player;
 
 public class ReorderPlayersTests : IntegrationTestBase
 {
-    public ReorderPlayersTests(IntegrationTestFactory factory) : base(factory) { }
+    public ReorderPlayersTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task ReorderPlayers_WithValidData_ReturnsSuccess()

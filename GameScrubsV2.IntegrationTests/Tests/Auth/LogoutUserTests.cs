@@ -7,7 +7,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Auth;
 
 public class LogoutUserTests : IntegrationTestBase
 {
-    public LogoutUserTests(IntegrationTestFactory factory) : base(factory) { }
+    public LogoutUserTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task Logout_WithValidToken_ReturnsSuccess()

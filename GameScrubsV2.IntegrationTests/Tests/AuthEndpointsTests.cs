@@ -11,7 +11,7 @@ namespace GameScrubsV2.IntegrationTests.Tests;
 
 public class AuthEndpointsTests : IntegrationTestBase
 {
-    public AuthEndpointsTests(IntegrationTestFactory factory) : base(factory) { }
+    public AuthEndpointsTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task Login_WithValidCredentials_ReturnsSuccessAndToken()

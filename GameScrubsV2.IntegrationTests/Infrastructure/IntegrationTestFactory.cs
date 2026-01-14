@@ -5,17 +5,18 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Testcontainers.MsSql;
 using Xunit;
 
 namespace GameScrubsV2.IntegrationTests.Infrastructure;
 
-public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLifetime
+public class IntegrationTestFactory : WebApplicationFactory<Program>
 {
-    private readonly MsSqlContainer _dbContainer = new MsSqlBuilder()
-        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
-        .WithPassword("Test123!")
-        .Build();
+    private readonly DatabaseFixture _databaseFixture;
+
+    public IntegrationTestFactory(DatabaseFixture databaseFixture)
+    {
+        _databaseFixture = databaseFixture;
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -33,25 +34,17 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
 
             services.AddDbContext<GameScrubsV2DbContext>(options =>
             {
-                options.UseSqlServer(_dbContainer.GetConnectionString());
+                options.UseSqlServer(_databaseFixture.ConnectionString);
             });
         });
 
         builder.UseEnvironment("Testing");
     }
 
-    public async Task InitializeAsync()
+    public async Task EnsureDatabaseCreatedAsync()
     {
-        await _dbContainer.StartAsync();
-        
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<GameScrubsV2DbContext>();
         await context.Database.MigrateAsync();
-    }
-
-    public new async Task DisposeAsync()
-    {
-        await _dbContainer.DisposeAsync();
-        await base.DisposeAsync();
     }
 }

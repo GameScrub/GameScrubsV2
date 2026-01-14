@@ -10,7 +10,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Placement;
 
 public class SetPlacementScoreTests : IntegrationTestBase
 {
-    public SetPlacementScoreTests(IntegrationTestFactory factory) : base(factory) { }
+    public SetPlacementScoreTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task SetPlacementScore_WithValidData_ReturnsSuccess()

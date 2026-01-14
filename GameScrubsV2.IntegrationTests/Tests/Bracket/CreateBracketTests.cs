@@ -10,7 +10,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Bracket;
 
 public class CreateBracketTests : IntegrationTestBase
 {
-    public CreateBracketTests(IntegrationTestFactory factory) : base(factory) { }
+    public CreateBracketTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task CreateBracket_WithValidData_ReturnsCreatedBracket()
@@ -41,6 +41,54 @@ public class CreateBracketTests : IntegrationTestBase
         bracket.Status.Should().Be(BracketStatus.Setup);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("A")]
+    [InlineData("ABC")]
+    [InlineData("ABCD")]
+    public async Task CreateBracket_WithInvalidName_ReturnsBadRequest(string invalidName)
+    {
+        // Arrange
+        var createRequest = new
+        {
+            Name = invalidName,
+            Game = "Counter-Strike 2",
+            Type = BracketType.Single_8,
+            Competition = CompetitionType.VideoGames,
+            StartDate = DateOnly.FromDateTime(DateTime.Now.AddDays(7))
+        };
+
+        // Act
+        var response = await HttpClient.PostAsync("/api/brackets", CreateJsonContent(createRequest));
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("A")]
+    [InlineData("ABC")]
+    [InlineData("ABCD")]
+    public async Task CreateBracket_WithInvalidGame_ReturnsBadRequest(string invalidGame)
+    {
+        // Arrange
+        var createRequest = new
+        {
+            Name = "Valid Tournament Name",
+            Game = invalidGame,
+            Type = BracketType.Single_8,
+            Competition = CompetitionType.VideoGames,
+            StartDate = DateOnly.FromDateTime(DateTime.Now.AddDays(7))
+        };
+
+        // Act
+        var response = await HttpClient.PostAsync("/api/brackets", CreateJsonContent(createRequest));
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
     [Fact]
     public async Task CreateBracket_WithPastStartDate_ReturnsBadRequest()
     {
@@ -59,6 +107,29 @@ public class CreateBracketTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task CreateBracket_WithInvalidNameReturnsValidationError()
+    {
+        // Arrange
+        var createRequest = new
+        {
+            Name = "A", // Too short - minimum is 5
+            Game = "Counter-Strike 2",
+            Type = BracketType.Single_8,
+            Competition = CompetitionType.VideoGames,
+            StartDate = DateOnly.FromDateTime(DateTime.Now.AddDays(7))
+        };
+
+        // Act
+        var response = await HttpClient.PostAsync("/api/brackets", CreateJsonContent(createRequest));
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("validation"); // Should contain validation error details
     }
 
     [Fact]

@@ -87,14 +87,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// Add Rate Limiting only if enabled
-var rateLimitingSettings = builder.Configuration
-	.GetSection(RateLimitingSettings.Key)
-	.Get<RateLimitingSettings>();
-if (rateLimitingSettings?.Enabled == true)
-{
-	builder.ConfigureRateLimiting();
-}
+builder.ConfigureRateLimiting();
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -171,11 +164,7 @@ app.UseSerilogRequestLogging(options =>
 app.UseCors("AllowVueApp");
 app.UseHttpsRedirection();
 
-// Only use rate limiting if it was configured
-if (rateLimitingSettings?.Enabled == true)
-{
-	app.UseRateLimiter();
-}
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -9,7 +9,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Report;
 
 public class GetRecentActivityTests : IntegrationTestBase
 {
-    public GetRecentActivityTests(IntegrationTestFactory factory) : base(factory) { }
+    public GetRecentActivityTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task GetRecentActivity_ReturnsActivityList()

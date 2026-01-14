@@ -10,7 +10,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Auth;
 
 public class RegisterUserTests : IntegrationTestBase
 {
-    public RegisterUserTests(IntegrationTestFactory factory) : base(factory) { }
+    public RegisterUserTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task Register_WithValidData_ReturnsSuccess()

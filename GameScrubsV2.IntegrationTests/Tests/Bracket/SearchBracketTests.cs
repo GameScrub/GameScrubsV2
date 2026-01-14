@@ -10,7 +10,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Bracket;
 
 public class SearchBracketTests : IntegrationTestBase
 {
-    public SearchBracketTests(IntegrationTestFactory factory) : base(factory) { }
+    public SearchBracketTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task SearchBracket_ReturnsPagedResults()

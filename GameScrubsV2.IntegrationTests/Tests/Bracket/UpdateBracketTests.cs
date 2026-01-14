@@ -10,7 +10,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Bracket;
 
 public class UpdateBracketTests : IntegrationTestBase
 {
-    public UpdateBracketTests(IntegrationTestFactory factory) : base(factory) { }
+    public UpdateBracketTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task UpdateBracket_WithValidData_ReturnsSuccess()

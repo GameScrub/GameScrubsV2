@@ -10,7 +10,7 @@ namespace GameScrubsV2.IntegrationTests.Tests.Bracket;
 
 public class DeleteBracketTests : IntegrationTestBase
 {
-    public DeleteBracketTests(IntegrationTestFactory factory) : base(factory) { }
+    public DeleteBracketTests(DatabaseFixture databaseFixture) : base(databaseFixture) { }
 
     [Fact]
     public async Task DeleteBracket_WithExistingBracket_ReturnsSuccess()
@@ -34,7 +34,7 @@ public class DeleteBracketTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.NoContent);
-        
+
         // Verify bracket is deleted
         var getResponse = await HttpClient.GetAsync($"/api/brackets/{createdBracket.Id}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);

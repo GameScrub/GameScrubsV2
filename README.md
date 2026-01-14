@@ -45,7 +45,7 @@ A modern tournament bracket management system built with ASP.NET Core and Vue.js
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/GameScrubsV2.git
+git clone https://github.com/GameScrub/GameScrubsV2.git
 cd GameScrubsV2
 ```
 

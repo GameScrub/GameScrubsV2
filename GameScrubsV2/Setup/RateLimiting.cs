@@ -1,5 +1,7 @@
 ﻿using System.Threading.RateLimiting;
 
+using GameScrubsV2.Configurations;
+
 namespace GameScrubsV2.Setup;
 
 public static class RateLimiting
@@ -11,6 +13,19 @@ public static class RateLimiting
 		 {
 			const string unknown = "Unknown";
 			const string rateLimiting = "RateLimiting";
+
+			var rateLimitingSettings = webApplicationBuilder.Configuration
+				.GetSection(RateLimitingSettings.Key)
+				.Get<RateLimitingSettings>();
+
+			if (!rateLimitingSettings!.Enabled)
+			{
+				options.AddPolicy("CreateBracket", context => RateLimitPartition.GetNoLimiter("test"));
+				options.AddPolicy("PlayerOperations", context => RateLimitPartition.GetNoLimiter("test"));
+				options.AddPolicy("BracketUpdates", context => RateLimitPartition.GetNoLimiter("test"));
+				options.AddPolicy("SearchOperations", context => RateLimitPartition.GetNoLimiter("test"));
+			}
+			else {
 
 			 // Global rate limiter - applies to all requests
 			 options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
@@ -103,6 +118,7 @@ public static class RateLimiting
 						 : (double?)null
 				 }, cancellationToken);
 			 };
+			}
 		 });
  }
 }
