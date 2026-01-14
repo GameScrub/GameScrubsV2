@@ -1,4 +1,4 @@
-# GameScrubsV2 🏆
+# GameScrubsV2
 
 A modern tournament bracket management system built with ASP.NET Core and Vue.js, designed to streamline competitive gaming tournaments with real-time updates and comprehensive bracket management.
 
