@@ -28,7 +28,6 @@ public sealed class BracketRepository
 	public async Task<IEnumerable<Bracket>?> GetAllAsync(CancellationToken cancellationToken) =>
 		await _cache.GetOrCreateAsync(AllCacheKey, async _ => await _dbContext.Brackets
 			.AsNoTracking()
-			.OrderBy(dbSeason => dbSeason.StartDate)
 			.ToArrayAsync(cancellationToken));
 
 	public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken) =>
