@@ -15,7 +15,7 @@ public static partial class DashboardEndpoints
 				var brackets = await bracketRepository.GetAllAsync(cancellationToken);
 
 				var groupedBrackets = brackets?
-					.OrderBy(bracket => bracket.CreatedDate)
+					.OrderByDescending(bracket => bracket.CreatedDate)
 					.GroupBy(bracket => bracket.Status)
 					.Select(bracket => new { bracket.Key, Brackets = bracket
 						.Select(GetBracketByIdResponse.ToResponseModel)
