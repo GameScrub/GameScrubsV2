@@ -96,7 +96,7 @@ public static partial class PlayerEndpoints
 	{
 		public required int BracketId { get; init; }
 
-		[Min(1)]
+		[MinLength(1)]
 		[MaxLength(25)]
 		public required string PlayerName { get; init; }
 
