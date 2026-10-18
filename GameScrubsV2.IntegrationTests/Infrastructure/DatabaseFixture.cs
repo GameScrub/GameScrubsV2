@@ -11,8 +11,7 @@ public class DatabaseFixture : IAsyncLifetime
     
     public DatabaseFixture()
     {
-        _dbContainer = new MsSqlBuilder()
-            .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+        _dbContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
             .WithPassword("Test123!")
             .WithName($"gamecrubsv2-shared-{Guid.NewGuid():N}")
             .WithCleanUp(true)
