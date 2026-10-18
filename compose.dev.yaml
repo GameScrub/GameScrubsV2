@@ -1,0 +1,71 @@
+# Local full-stack environment for testing: SQL Server, migrations, API and web app.
+#
+#   docker compose -f compose.dev.yaml up --build
+#
+# Web app: http://localhost:5180   API/Swagger: http://localhost:8080/swagger
+# Data lives in the "sqldata" volume; "docker compose -f compose.dev.yaml down -v" wipes it.
+name: gamescrubs-dev
+
+x-db-connection: &db-connection "Server=sqlserver,1433;Database=GameScrubsV2;User Id=sa;Password=GameScrubs_Dev123!;TrustServerCertificate=True;"
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "GameScrubs_Dev123!" # local test container only
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'GameScrubs_Dev123!' -C -Q 'SELECT 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  # Applies all EF migrations (including the bracket position data), then exits
+  migrate:
+    build:
+      context: .
+      dockerfile: GameScrubsV2/Dockerfile
+      target: build
+    working_dir: /src/GameScrubsV2
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: *db-connection
+    command: >
+      sh -c "dotnet tool install --global dotnet-ef --version 10.0.13 &&
+             /root/.dotnet/tools/dotnet-ef database update --context GameScrubsV2DbContext"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: GameScrubsV2/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ConnectionStrings__DefaultConnection: *db-connection
+      CorsSettings__AllowedOrigins__0: http://localhost:5180
+      # All browser requests arrive through nginx (one IP), so the per-IP limits would be shared by everyone
+      RateLimiting__Enabled: "false"
+    ports:
+      - "8080:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: GameScrubsV2.Web
+    ports:
+      - "5180:80"
+    depends_on:
+      - api
+
+volumes:
+  sqldata:
