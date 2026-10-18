@@ -142,6 +142,26 @@
                 </select>
               </div>
 
+              <!-- Grand Final Reset (Double Elimination only) -->
+              <div v-if="isDoubleElimination" class="mb-6">
+                <label
+                  class="flex items-center gap-3 text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  <input
+                    id="grandFinalReset"
+                    v-model="formData.grandFinalReset"
+                    type="checkbox"
+                    :disabled="isFormDisabled"
+                    class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  Grand Final Reset
+                </label>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  If the losers bracket player wins the grand final, both players have one loss and
+                  play one more match for the title.
+                </p>
+              </div>
+
               <!-- Competition Type -->
               <div class="mb-6">
                 <label
@@ -318,6 +338,7 @@ interface BracketFormData {
   competition: Competition | '';
   startDate: string;
   lockCode: string;
+  grandFinalReset: boolean;
 }
 
 const formData: Ref<BracketFormData> = ref({
@@ -327,7 +348,10 @@ const formData: Ref<BracketFormData> = ref({
   competition: '',
   startDate: '',
   lockCode: '',
+  grandFinalReset: true,
 });
+
+const isDoubleElimination = computed(() => formData.value.type.startsWith('Double'));
 
 const minDate = computed(() => {
   const today = new Date();
@@ -407,6 +431,7 @@ async function loadBracket() {
       competition: bracketData.competition,
       startDate: bracketData.startDate?.split('T')[0] || '',
       lockCode: '',
+      grandFinalReset: bracketData.grandFinalReset,
     };
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Failed to load bracket';
@@ -447,6 +472,7 @@ async function createBracket() {
     type: formData.value.type,
     competition: formData.value.competition,
     startDate: formData.value.startDate,
+    grandFinalReset: formData.value.grandFinalReset,
     lockCode: formData.value.lockCode || undefined,
   };
 
@@ -472,6 +498,7 @@ async function updateBracket() {
     type: formData.value.type,
     competition: formData.value.competition,
     startDate: formData.value.startDate,
+    grandFinalReset: formData.value.grandFinalReset,
     lockCode: formData.value.lockCode || undefined,
   };
 

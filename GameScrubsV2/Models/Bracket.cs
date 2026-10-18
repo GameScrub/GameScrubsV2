@@ -20,6 +20,12 @@ public sealed class Bracket
 
 	public CompetitionType Competition { get; set; }
 
+	/// <summary>
+	/// Double elimination only: when the losers bracket player wins the grand finals,
+	/// a reset match is played since both players then have one loss.
+	/// </summary>
+	public bool GrandFinalReset { get; set; }
+
 	public DateTime StartDate { get; set; }
 
 	public DateTime CreatedDate { get; set; }

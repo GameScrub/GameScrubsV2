@@ -39,6 +39,7 @@
             <div class="bracket-wrapper">
               <WinnersBracket
                 :rounds="winnersRounds"
+                :reset-match="resetMatch"
                 :champion="champion"
                 :bracket-status="bracket?.status"
                 :is-double-elimination="isDoubleElimination"
@@ -169,6 +170,21 @@ const winnersRounds = computed(() => {
 
 const losersRounds = computed(() => {
   return buildRounds(losersMatches.value);
+});
+
+// Grand final reset match (r1 vs r2), only played if the losers bracket player wins the grand final
+const resetMatch = computed((): MatchWithData | null => {
+  if (!bracket.value?.grandFinalReset) return null;
+
+  const match = positions.value.find((position) => position.player1 === 'r1');
+  if (!match) return null;
+
+  return {
+    ...match,
+    player1Data: placements.value.find((p) => p.bracketPlace === match.player1) || null,
+    player2Data: placements.value.find((p) => p.bracketPlace === match.player2) || null,
+    round: winnersRounds.value.length + 1,
+  };
 });
 
 const isDoubleElimination = computed(() => {

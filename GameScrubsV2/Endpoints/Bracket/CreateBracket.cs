@@ -38,6 +38,7 @@ public static partial class BracketEndpoints
 						LockCode = request.LockCode,
 						Type = request.Type,
 						Competition = request.Competition,
+						GrandFinalReset = request.GrandFinalReset,
 						Status = BracketStatus.Setup,
 						Game = request.Game,
 						StartDate = startDate,
@@ -76,6 +77,7 @@ public static partial class BracketEndpoints
 		public required BracketType Type { get; init; }
 		public required CompetitionType Competition { get; init; }
 		public required DateOnly StartDate { get; init; }
+		public bool GrandFinalReset { get; init; } = true;
 	}
 
 	public sealed record CreateBracketResponse
@@ -87,6 +89,7 @@ public static partial class BracketEndpoints
 		public required BracketType Type { get; init; }
 		public required BracketStatus Status { get; init; }
 		public required CompetitionType Competition { get; init; }
+		public required bool GrandFinalReset { get; init; }
 		public required DateTime StartDate { get; init; }
 		public required DateTime CreatedDate { get; init; }
 
@@ -99,6 +102,7 @@ public static partial class BracketEndpoints
 			Type = data.Type,
 			Status = data.Status,
 			Competition = data.Competition,
+			GrandFinalReset = data.GrandFinalReset,
 			StartDate = data.StartDate,
 			CreatedDate = data.CreatedDate
 		};

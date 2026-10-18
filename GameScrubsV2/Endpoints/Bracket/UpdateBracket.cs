@@ -37,6 +37,14 @@ public static partial class BracketEndpoints
 						return Results.BadRequest(new MessageResponse("Invalid lock code, failed to update bracket"));
 					}
 
+					if (request.GrandFinalReset is not null
+					    && request.GrandFinalReset != bracket.GrandFinalReset
+					    && bracket.Status != BracketStatus.Setup)
+					{
+						return Results.BadRequest(
+							new MessageResponse("Grand final reset can only be changed before the bracket starts"));
+					}
+
 					var startDate = DateTime.Parse(request.StartDate.ToString());
 
 					if (startDate.Date < timeProvider.GetUtcNow().DateTime.Date)
@@ -51,6 +59,7 @@ public static partial class BracketEndpoints
 					bracket.Competition = request.Competition;
 					bracket.Game = request.Game;
 					bracket.StartDate = startDate;
+					bracket.GrandFinalReset = request.GrandFinalReset ?? bracket.GrandFinalReset;
 
 					await bracketRepository.UpdateAsync(bracket, cancellationToken);
 
@@ -87,6 +96,7 @@ public static partial class BracketEndpoints
 		public required BracketType Type { get; init; }
 		public required CompetitionType Competition { get; init; }
 		public required DateOnly StartDate { get; init; }
+		public bool? GrandFinalReset { get; init; }
 	}
 
 	public sealed record UpdateBracketResponse
@@ -97,6 +107,7 @@ public static partial class BracketEndpoints
 		public required bool IsLocked { get; init; }
 		public required BracketType Type { get; init; }
 		public required CompetitionType Competition { get; init; }
+		public required bool GrandFinalReset { get; init; }
 		public required DateTime StartDate { get; init; }
 		public required DateTime CreatedDate { get; init; }
 
@@ -108,6 +119,7 @@ public static partial class BracketEndpoints
 			IsLocked = data.IsLocked,
 			Type = data.Type,
 			Competition = data.Competition,
+			GrandFinalReset = data.GrandFinalReset,
 			StartDate = data.StartDate,
 			CreatedDate = data.CreatedDate
 		};

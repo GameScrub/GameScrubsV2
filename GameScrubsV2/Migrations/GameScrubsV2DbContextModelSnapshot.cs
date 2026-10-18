@@ -17,7 +17,7 @@ namespace GameScrubsV2.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -39,6 +39,9 @@ namespace GameScrubsV2.Migrations
 
                     b.Property<string>("Game")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("GrandFinalReset")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsLocked")
                         .HasColumnType("bit")

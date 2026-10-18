@@ -69,6 +69,7 @@ export const bracketService = {
     email?: string;
     url?: string;
     lockCode?: string;
+    grandFinalReset?: boolean;
   }): Promise<Bracket> {
     const response = await fetch(`${API_BASE_URL}/brackets`, {
       method: 'POST',
@@ -94,6 +95,7 @@ export const bracketService = {
       email?: string;
       url?: string;
       lockCode?: string;
+      grandFinalReset?: boolean;
     },
     lockCode?: string,
   ): Promise<Bracket> {

@@ -21,6 +21,14 @@
           </h1>
         </div>
 
+        <!-- Grand Final Reset Header -->
+        <div v-if="resetMatch" class="round-header">
+          <h1 class="text-base md:text-base text-gray-800 dark:text-gray-100 font-bold mb-2">
+            Reset
+            <span class="font-normal text-gray-500 dark:text-gray-400">(if needed)</span>
+          </h1>
+        </div>
+
         <!-- Champion Header -->
         <div class="round-header">
           <h1 class="text-base md:text-base text-gray-800 dark:text-gray-100 font-bold mb-2">
@@ -30,7 +38,7 @@
       </div>
 
       <!-- Rounds with Matches -->
-      <div class="rounds">
+      <div class="rounds" :class="{ 'has-reset': !!resetMatch }">
         <template v-for="(round, roundIndex) in rounds" :key="`winners-${roundIndex}`">
           <div
             class="round"
@@ -79,6 +87,28 @@
           </div>
         </template>
 
+        <!-- Grand Final Reset: lines up with the grand final, dimmed until it's needed -->
+        <template v-if="resetMatch">
+          <div class="connector-space"></div>
+          <div
+            class="round reset-round"
+            :class="{ 'is-pending': !resetMatch.player1Data && !resetMatch.player2Data }"
+            :style="getBracketMatchOffset(rounds.length - 1)"
+          >
+            <div class="matches">
+              <div class="match-wrapper">
+                <BracketMatch
+                  :player1="resetMatch.player1Data"
+                  :player2="resetMatch.player2Data"
+                  :show-scores="false"
+                  :bracket-status="bracketStatus"
+                  :is-winners-bracket="true"
+                />
+              </div>
+            </div>
+          </div>
+        </template>
+
         <!-- Champion Section -->
         <div class="round champion-round" :style="getChampionOffset()">
           <div class="matches">
@@ -114,6 +144,7 @@ interface MatchWithData {
 
 interface Props {
   rounds: MatchWithData[][];
+  resetMatch?: MatchWithData | null;
   champion: BracketPlacement | null;
   bracketStatus?: string;
   isDoubleElimination?: boolean;
@@ -511,5 +542,24 @@ function getChampionOffset() {
   background: #51a2ff;
   transform: translateY(-50%);
   display: block !important; /* Override the earlier display: none */
+}
+
+/* Grand final reset: grand final connects to the reset match, the reset match connects to the champion */
+.rounds.has-reset .round.is-last-round .matches :deep(.match::after) {
+  right: -4rem;
+  width: 4rem;
+}
+
+.round.reset-round .matches :deep(.match::before) {
+  display: none !important;
+}
+
+.round.reset-round .matches :deep(.match::after) {
+  right: -8rem;
+  width: 8rem;
+}
+
+.round.reset-round.is-pending {
+  opacity: 0.5;
 }
 </style>

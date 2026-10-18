@@ -10,6 +10,7 @@ export interface Bracket {
   type: BracketType;
   status: BracketStatus;
   competition: Competition;
+  grandFinalReset: boolean;
   startDate: string;
   createdDate: string;
 }

@@ -15,6 +15,13 @@ public static partial class PlacementEndpoints
 {
 	private const string IsDouble = "double";
 
+	/// <summary>
+	/// Grand finals reset match slots: the winners bracket player (r1) against the losers bracket player (r2).
+	/// </summary>
+	private const string ResetPlayer1 = "r1";
+
+	private const string ResetPlayer2 = "r2";
+
 	public static void SetPlacementScore(this RouteGroupBuilder group) =>
 		group.MapPost("/score/{placementId:int}/{lockCode?}", async (
 				[FromRoute] int bracketId,
@@ -82,12 +89,40 @@ public static partial class PlacementEndpoints
 					return Results.Ok();
 				}
 
+				var isPlayer1 = position.Player1 == winner.BracketPlace;
+
+				var resetPosition = bracketPositions.SingleOrDefault(bracketPosition => bracketPosition.Player1 == ResetPlayer1);
+
+				var isGrandFinalsWithReset = bracket.GrandFinalReset
+											&& resetPosition is not null
+											&& position != resetPosition
+											&& position.WinLocation == resetPosition.WinLocation;
+
+				if (isGrandFinalsWithReset)
+				{
+					var response = await SetGrandFinalsWinner(
+						dbContext,
+						winner,
+						bracket,
+						position,
+						isPlayer1,
+						logger,
+						cancellationToken);
+
+					if (response != Success)
+					{
+						return Results.InternalServerError(new MessageResponse(response.ToString()));
+					}
+
+					await bracketHubService.NotifyMatchScoreUpdated(bracketId, winner.Id);
+
+					return Results.NoContent();
+				}
+
 				var isEdit = await dbContext.Placements
 					.AnyAsync(placement => placement.BracketId == bracket.Id &&
 										   placement.BracketPlace == position.WinLocation,
 					cancellationToken);
-
-				var isPlayer1 = position.Player1 == winner.BracketPlace;
 
 				var winnerScore = await dbContext.BracketScores
 					.SingleOrDefaultAsync(score => score.BracketPlace == position.WinLocation
@@ -268,6 +303,104 @@ public static partial class PlacementEndpoints
 		await dbContext.SaveChangesAsync(cancellationToken);
 
 		return Success;
+	}
+
+	/// <summary>
+	/// Sets the grand finals winner for a bracket with a grand final reset.
+	/// If the winners bracket player wins they are the champion. If the losers bracket player wins,
+	/// both players have one loss so they move to the reset match, whose winner is the champion.
+	/// Anything already decided after the grand finals is cleared, so the result can be changed.
+	/// </summary>
+	private static async Task<SetPlacementScoreResult> SetGrandFinalsWinner(
+		GameScrubsV2DbContext dbContext,
+		Models.Placement winner,
+		Models.Bracket bracket,
+		BracketPosition position,
+		bool isPlayer1,
+		ILogger logger,
+		CancellationToken cancellationToken)
+	{
+		try
+		{
+			var loser = await dbContext.Placements
+				.SingleOrDefaultAsync(placement => placement.BracketId == bracket.Id
+				                                   && placement.BracketPlace == (isPlayer1
+					                                   ? position.Player2
+					                                   : position.Player1),
+					cancellationToken);
+
+			if (loser is null)
+			{
+				logger.LogError("Loser placement not found for bracket position {@BracketPosition}", position);
+				return MissingLoserPlacement;
+			}
+
+			winner.Status = PlacementStatus.Winner;
+			loser.Status = PlacementStatus.Loser;
+
+			var placementsAfterGrandFinals = await dbContext.Placements
+				.Where(placement => placement.BracketId == bracket.Id
+				                    && (placement.BracketPlace == position.WinLocation
+				                        || placement.BracketPlace == ResetPlayer1
+				                        || placement.BracketPlace == ResetPlayer2))
+				.ToListAsync(cancellationToken);
+
+			dbContext.Placements.RemoveRange(placementsAfterGrandFinals);
+
+			var scores = await dbContext.BracketScores
+				.Where(score => score.Type == bracket.Type
+				                && (score.BracketPlace == position.WinLocation
+				                    || score.BracketPlace == ResetPlayer1
+				                    || score.BracketPlace == ResetPlayer2))
+				.ToDictionaryAsync(score => score.BracketPlace!, score => score.Score, cancellationToken);
+
+			if (isPlayer1)
+			{
+				dbContext.Placements.Add(new Models.Placement
+				{
+					BracketId = bracket.Id,
+					PlayerName = winner.PlayerName,
+					BracketPlace = position.WinLocation,
+					Score = scores.GetValueOrDefault(position.WinLocation!),
+					Status = PlacementStatus.Default,
+					PreviousBracketPlace = winner.BracketPlace,
+					IsTop = true,
+				});
+			}
+			else
+			{
+				dbContext.Placements.Add(new Models.Placement
+				{
+					BracketId = bracket.Id,
+					PlayerName = loser.PlayerName,
+					BracketPlace = ResetPlayer1,
+					Score = scores.GetValueOrDefault(ResetPlayer1),
+					Status = PlacementStatus.Default,
+					PreviousBracketPlace = loser.BracketPlace,
+					IsTop = true,
+				});
+
+				dbContext.Placements.Add(new Models.Placement
+				{
+					BracketId = bracket.Id,
+					PlayerName = winner.PlayerName,
+					BracketPlace = ResetPlayer2,
+					Score = scores.GetValueOrDefault(ResetPlayer2),
+					Status = PlacementStatus.Default,
+					PreviousBracketPlace = winner.BracketPlace,
+					IsTop = false,
+				});
+			}
+
+			await dbContext.SaveChangesAsync(cancellationToken);
+
+			return Success;
+		}
+		catch (Exception ex)
+		{
+			logger.LogError(ex, "Error setting grand finals winner for bracket {BracketId}", bracket.Id);
+			return DatabaseError;
+		}
 	}
 
 	public enum SetPlacementScoreResult
